@@ -49,7 +49,7 @@ class Ethernet2Frame(PCAPFrame):
 
 
 @dataclass
-class IEEE_802_3_LLC_Frame(PCAPFrame):
+class IEEE_802_3_LLC_BASE_Frame(PCAPFrame):
     destination_mac: str
     source_mac: str
     data: bytes
@@ -58,7 +58,6 @@ class IEEE_802_3_LLC_Frame(PCAPFrame):
     control: str = field(default=None)
     isl: bytes = field(repr=False, default=None)
 
-    frame_type: FrameType = FrameType.IEEE_802_3_LLC
     DSAP_code: str = field(repr=False, default=None)
     SSAP_code: str = field(repr=False, default=None)
 
@@ -75,36 +74,24 @@ class IEEE_802_3_LLC_Frame(PCAPFrame):
 
 
 @dataclass
-class IEEE_802_3_LLC_SNAP_Frame(PCAPFrame):
-    destination_mac: str
-    source_mac: str
-    data: bytes
-    DSAP: IEEE_SAP = field(default=None)
-    SSAP: IEEE_SAP = field(default=None)
-    control: str = field(default=None)
+class IEEE_802_3_LLC_Frame(IEEE_802_3_LLC_BASE_Frame):
+    frame_type: FrameType = FrameType.IEEE_802_3_LLC
+
+
+@dataclass
+class IEEE_802_3_LLC_SNAP_Frame(IEEE_802_3_LLC_BASE_Frame):
     vemdor_code: str = field(default=None)
-    isl: bytes = field(repr=False, default=None)
 
     frame_type: FrameType = FrameType.IEEE_802_3_LLC_SNAP
     ether_type: EtherType = field(default=None)
     ether_type_code: str = field(default=None)
-    DSAP_code: str = field(repr=False, default=None)
-    SSAP_code: str = field(repr=False, default=None)
 
     def __post_init__(self) -> None:
-        self.control = self.control.upper()
-        self.DSAP_code = self.DSAP_code.upper()
-        self.SSAP_code = self.SSAP_code.upper()
-
-        self.DSAP = IEEE_SAPs.get(self.DSAP_code, IEEE_SAP.UNKNOWN)
-        self.SSAP = IEEE_SAPs.get(self.SSAP_code, IEEE_SAP.UNKNOWN)
+        super().__post_init__()
 
         self.ether_type_code = self.ether_type_code.upper()
         self.ether_type = EtherTypes.get(self.ether_type_code, EtherType.UNKNOWN)
 
-    @property
-    def hexlify_data(self) -> str:
-        return binascii.hexlify(self.data).decode('utf-8').upper()
 
 
 
