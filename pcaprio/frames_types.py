@@ -75,18 +75,36 @@ class IEEE_802_3_LLC_Frame(PCAPFrame):
 
 
 @dataclass
-class IEEE_802_3_LLC_SNAP_Frame(IEEE_802_3_LLC_Frame):
+class IEEE_802_3_LLC_SNAP_Frame(PCAPFrame):
+    destination_mac: str
+    source_mac: str
+    data: bytes
+    DSAP: IEEE_SAP = field(default=None)
+    SSAP: IEEE_SAP = field(default=None)
+    control: str = field(default=None)
     vemdor_code: str = field(default=None)
+    isl: bytes = field(repr=False, default=None)
 
+    frame_type: FrameType = FrameType.IEEE_802_3_LLC_SNAP
     ether_type: EtherType = field(default=None)
     ether_type_code: str = field(default=None)
-    frame_type: FrameType = FrameType.IEEE_802_3_LLC_SNAP
+    DSAP_code: str = field(repr=False, default=None)
+    SSAP_code: str = field(repr=False, default=None)
 
     def __post_init__(self) -> None:
-        super().__post_init__()
+        self.control = self.control.upper()
+        self.DSAP_code = self.DSAP_code.upper()
+        self.SSAP_code = self.SSAP_code.upper()
+
+        self.DSAP = IEEE_SAPs.get(self.DSAP_code, IEEE_SAP.UNKNOWN)
+        self.SSAP = IEEE_SAPs.get(self.SSAP_code, IEEE_SAP.UNKNOWN)
 
         self.ether_type_code = self.ether_type_code.upper()
         self.ether_type = EtherTypes.get(self.ether_type_code, EtherType.UNKNOWN)
+
+    @property
+    def hexlify_data(self) -> str:
+        return binascii.hexlify(self.data).decode('utf-8').upper()
 
 
 
@@ -95,6 +113,7 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
     Короче, это было на преднашке, страница 14 (преднашка 3_2022_Ethernet_linkova 20)
     """
 
+    """Если первые 6 байт равны 01-00-0C-00-00, то это ISL. Его нужно вырезать. Я поп риколу добавляю новое поле isl. Вдруг понадобится...."""
     isl = None
     if raw_data.hex().startswith('01000c0000'):
         isl, raw_data = raw_data[:26], raw_data[26:]

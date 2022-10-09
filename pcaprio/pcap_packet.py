@@ -4,7 +4,7 @@ import binascii
 
 from dataclasses import dataclass
 from dataclasses import field
-from .frames_types import identify_frame
+from .frames_types import IEEE_802_3_LLC_SNAP_Frame, IEEE_802_3_LLC_Frame, identify_frame
 from .frames_types import PCAPFrame
 from .enumerations import FrameType
 from .utils import beautiful_hex
@@ -71,10 +71,10 @@ class PCAPPacket:
             'hexa_frame': self.beautiful_hexlify_data
         }
 
-        if self.frame.frame_type == FrameType.IEEE_802_3_LLC_SNAP:
+        if isinstance(self.frame, IEEE_802_3_LLC_SNAP_Frame):
             res['pid'] = self.frame.ether_type.value
         
-        if self.frame.frame_type == FrameType.IEEE_802_3_LLC:
+        if isinstance(self.frame, IEEE_802_3_LLC_Frame):
             res['sap'] = self.frame.DSAP.value
         
         return res
