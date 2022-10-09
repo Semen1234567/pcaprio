@@ -1,11 +1,13 @@
 import binascii
 
 
-from dataclasses import dataclass, field
-from .frames_types import Ethernet2Frame, identify_frame
-from .frames_types import PCAPFrame
-from .enumerations import EtherTypes
 
+from dataclasses import dataclass
+from dataclasses import field
+from .frames_types import identify_frame
+from .frames_types import PCAPFrame
+from .enumerations import FrameType
+from .utils import beautiful_hex
 
 
 @dataclass
@@ -15,63 +17,64 @@ class PCAPPacket:
     incl_len: int
     orig_len: int
     data: bytes
-    
 
     raw: bytes = field(repr=False, default=None)
     frame: PCAPFrame = field(default=None)
 
+
     @property
     def hexlify_data(self) -> str:
-        return binascii.hexlify(self.data).decode('utf-8')
+        return binascii.hexlify(self.data).decode('utf-8').upper()
+    
+    @property
+    def beautiful_hexlify_data(self) -> str:
+        return beautiful_hex(self.hexlify_data)
     
     @property
     def medium_len(self) -> len:
-        """IDK what this is, but my frieds seds m"""
-    
+        """
+                     _________________________________________
+                    / IDK, my friends said it works like this \\
+                    \\                                        /
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣤⠶⠛⠉⠉⠉⠉⢟⡒⠲⠤⣄⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣴⠋⠁⠀⠀⠀⠀⠀⣴⣟⣹⣗⡀⠈⠙⢶⡄⠀⠀⠀⠀⢀⡀⠀⠀⠀⠀⠀⠀⠀⢀⠀⣀⣀⣀⡀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡾⢁⣤⡄⠀⠀⠀⠀⠀⠀⢸⡋⣿⡿⣷⠀⠀⠙⢦⡀⣠⠞⠋⠉⠛⢦⡀⠀⠀⢀⣴⢿⣿⣿⡿⠿⢟⡓⣦
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠁⣯⣴⢤⡄⠀⠀⠀⠀⠀⠘⠷⡼⠿⠃⠀⠀⠀⠈⢿⠇⠀⠀⠀⠀⠀⠻⣆⠀⠸⣧⢸⣿⡷⢶⡟⠉⠙⠛
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢠⡇⢸⠫⣿⢰⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀⠀⢹⡆⠀⢹⡟⠉⠀⠀⢿⡀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡄⠈⠓⠚⠋⠀⠀⠀⠀⠀⠀⠀⣆⠀⠀⠀⠀⠀⠀⠀⠀⢿⠀⠀⠀⠀⠀⠀⠀⢻⡀⠀⢿⡀⠀⠀⠈⣧⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠞⠋⠉⠓⠶⣼⡇⠀⠀⠀⠀⠀⢷⣄⣠⠴⠖⠛⠻⠆⠀⠀⠀⠀⠀⠀⠀⢸⡆⠀⢀⠀⠀⠀⠀⠈⣧⠀⠈⣧⠀⠀⠀⢹⡄⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢰⡇⠀⠀⠀⠀⠀⠘⢿⡄⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⡇⠀⠈⢧⠀⠀⠀⠀⠘⣇⠀⣿⠀⠀⠀⠀⣧⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⠀⠀⠀⠀⠀⠀⠀⠀⢳⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠁⠀⠀⠸⡆⠀⠀⠀⠀⠹⣄⡿⠀⠀⠀⠀⣽⠀
+⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⡀⠀⠀⠙⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡼⠃⠀⠀⠀⠀⠻⣦⠀⠀⠀⠀⠉⠁⠀⠀⠀⠀⡏⠀
+⠀⠀⠀⠀⠀⠀⣰⣟⣇⠈⢻⡄⠀⠀⠀⢿⠀⠀⠀⠀⠀⠀⣇⠀⠀⠀⠈⠛⠦⢤⣀⣀⡀⠀⠀⠀⠀⠀⠀⣀⣠⠶⠋⠀⠀⠀⠀⠀⠀⠀⢸⢳⣄⠀⠀⠀⠀⠀⠀⠀⣸⠇⠀
+⠀⠀⠀⣀⣤⣿⠷⠋⠙⠂⠐⣷⠀⠀⠀⢸⡇⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠉⠉⠉⠉⠉⠉⠉⠉⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠙⢷⣄⣀⡀⠀⢀⣴⠏⠀⠀
+⠀⢠⣿⣽⣭⣿⠄⠀⠀⣀⡴⠿⢷⡀⠀⠘⡇⠀⠀⠀⠀⠀⣿⡏⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠀⠀⠀⠀⠈⠉⠉⠉⠀⠀⠀⠀
+⣴⢟⣩⣤⡴⠦⣴⣶⠞⠉⠀⠀⠈⣧⠀⠀⢿⠀⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠛⠿⠿⠋⠀⠀⠀⣿⠀⠀⠀⠀⠀⠈⠳⣤⣼⠆⠀⠀⠀⠀⣿⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡿⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠘⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⢻⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠸⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡟⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+        """
+        return 64 if self.incl_len <= 60 else self.incl_len + 4
+
 
     def parse(self) -> None:
         self.frame = identify_frame(self.data)
     
-    def _parse_default(self) -> None:
-        destination_mac = self.hexlify_data[0:12]
-        source_mac = self.hexlify_data[12:24]
-        
-        destination_mac = ':'.join(destination_mac[i:i+2] for i in range(0, len(destination_mac), 2))
-        source_mac = ':'.join(source_mac[i:i+2] for i in range(0, len(source_mac), 2))
-
-        return PCAPFrame(
-            destination_mac=destination_mac,
-            source_mac=source_mac
-        )
-    
-    def _parse_packet_like_ethernet(self) -> Ethernet2Frame | None:
-        destination_mac = self.hexlify_data[0:12]
-        source_mac = self.hexlify_data[12:24]
-        ethertype = self.hexlify_data[24:28]
-
-        if ethertype not in EtherTypes:
-            return False
-        
-        ethertype_name = EtherTypes[ethertype]
-
-        data = self.data[14:]
-
-        destination_mac = ':'.join(destination_mac[i:i+2] for i in range(0, len(destination_mac), 2))
-        source_mac = ':'.join(source_mac[i:i+2] for i in range(0, len(source_mac), 2))
-        
-        return Ethernet2Frame(
-            destination_mac=destination_mac,
-            source_mac=source_mac,
-            ether_type=ethertype_name,
-            data=data
-        )
-    
-    def __dict__(self) -> dict:
-        return {
-            'timestamp1': self.timestamp1,
-            'timestamp2': self.timestamp2,
-            'incl_len': self.incl_len,
-            'orig_len': self.orig_len,
-            'data': self.hexlify_data,
-            'frame': self.frame
+    def as_dict(self, frame_number: int = None) -> dict:
+        res = {
+            'frame_number': frame_number if frame_number != None else -1,
+            'len_frame_pcap': self.incl_len,
+            'len_frame_medium': self.medium_len,
+            'frame_type': self.frame.frame_type.value,
+            'src_mac': self.frame.source_mac,
+            'dst_mac': self.frame.destination_mac,
+            'hexa_frame': self.beautiful_hexlify_data
         }
+
+        if self.frame.frame_type == FrameType.IEEE_802_3_LLC_SNAP:
+            res['pid'] = self.frame.ether_type.value
+        
+        if self.frame.frame_type == FrameType.IEEE_802_3_LLC:
+            res['sap'] = self.frame.DSAP.value
+        
+        return res

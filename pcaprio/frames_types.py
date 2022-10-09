@@ -15,11 +15,13 @@ class PCAPFrame:
     source_mac: str
     
     frame_type: FrameType = None
+    isl: bytes = None
 
-    def __init__(self, destination_mac: str, source_mac: str, frame_type: FrameType = None) -> None:
+    def __init__(self, destination_mac: str, source_mac: str, frame_type: FrameType = None, isl: bytes = None) -> None:
         self.destination_mac = destination_mac
         self.source_mac = source_mac
         self.frame_type = frame_type
+        self.isl = isl
     
     def __repr__(self) -> str:
         return f'<PCAPPacketParsedView: {self.destination_mac} -> {self.source_mac} ({self.frame_type.__repr__()})>'
@@ -31,6 +33,8 @@ class Ethernet2Frame(PCAPFrame):
     source_mac: str
     data: bytes
     ether_type: str = field(default=None)
+    isl: bytes = field(repr=False, default=None)
+
 
     ether_type_code: str = field(repr=False, default=None)
     frame_type: FrameType = FrameType.Ethernet2
@@ -41,7 +45,7 @@ class Ethernet2Frame(PCAPFrame):
     
     @property
     def hexlify_data(self) -> str:
-        return binascii.hexlify(self.data).decode('utf-8')
+        return binascii.hexlify(self.data).decode('utf-8').upper()
 
 
 @dataclass
@@ -52,6 +56,7 @@ class IEEE_802_3_LLC_Frame(PCAPFrame):
     DSAP: IEEE_SAP = field(default=None)
     SSAP: IEEE_SAP = field(default=None)
     control: str = field(default=None)
+    isl: bytes = field(repr=False, default=None)
 
     frame_type: FrameType = FrameType.IEEE_802_3_LLC
     DSAP_code: str = field(repr=False, default=None)
@@ -66,15 +71,16 @@ class IEEE_802_3_LLC_Frame(PCAPFrame):
 
     @property
     def hexlify_data(self) -> str:
-        return binascii.hexlify(self.data).decode('utf-8')
+        return binascii.hexlify(self.data).decode('utf-8').upper()
 
 
 @dataclass
 class IEEE_802_3_LLC_SNAP_Frame(IEEE_802_3_LLC_Frame):
     vemdor_code: str = field(default=None)
 
-    ether_type: str = field(default=None)
+    ether_type: EtherType = field(default=None)
     ether_type_code: str = field(default=None)
+    frame_type: FrameType = FrameType.IEEE_802_3_LLC_SNAP
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -89,6 +95,11 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
     Короче, это было на преднашке, страница 14 (преднашка 3_2022_Ethernet_linkova 20)
     """
 
+    isl = None
+    if raw_data.hex().startswith('01000c0000'):
+        isl, raw_data = raw_data[:26], raw_data[26:]
+    
+
     destination_mac = raw_data[0:6].hex(':').upper()
     source_mac = raw_data[6:12].hex(':').upper()
 
@@ -97,7 +108,8 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
             destination_mac=destination_mac,
             source_mac=source_mac,
             ether_type_code=raw_data[12:14].hex(),
-            data=raw_data[14:]
+            data=raw_data[14:],
+            isl=isl
         )
     elif int.from_bytes(raw_data[12:14], 'big') < 1500:
         if raw_data[14:16].hex().upper() == "AAAA":
@@ -109,13 +121,15 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
                 control=raw_data[16:17].hex(),
                 vemdor_code=raw_data[17:20].hex(),
                 ether_type_code=raw_data[20:22].hex(),
-                data=raw_data[22:]
+                data=raw_data[22:],
+                isl=isl
             )
         elif raw_data[14:16].hex().upper() == "FFFF":
             return PCAPFrame(
                 destination_mac=destination_mac,
                 source_mac=source_mac,
-                frame_type=FrameType.Novell_802_3_Raw
+                frame_type=FrameType.Novell_802_3_Raw,
+                isl=isl
             )
         else:
             return IEEE_802_3_LLC_Frame(
@@ -124,5 +138,6 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
                 DSAP_code=raw_data[14:15].hex(),
                 SSAP_code=raw_data[15:16].hex(),
                 control=raw_data[16:17].hex(),
-                data=raw_data[17:]
+                data=raw_data[17:],
+                isl=isl
             )

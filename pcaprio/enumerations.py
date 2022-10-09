@@ -29,6 +29,11 @@ class EtherType(Enum):
     MPLS_WITH_UPSTREAM_ASSIGMENT: str = "Multiprotocol Label Switching (MPLS) with Upstream Assigment"
     PPPoE_DISCOVERY_STAGE: str = "PPPoE Discovery Stage"
     PPPoE_SESSION_STAGE: str = "PPPoE Session Stage"
+
+    CDP: str = "CDP" # Cisco Discovery Protocol
+    DTP: str = "DTP" # Dynamic Trunking Protocol
+    PVSTP_PLUS: str = "PVSTP+" # Per-VLAN Spanning Tree Plus
+
     UNKNOWN: str = "Unknown"
 
 EtherTypes = {
@@ -48,7 +53,11 @@ EtherTypes = {
     '8847': EtherType.MPLS,
     '8848': EtherType.MPLS_WITH_UPSTREAM_ASSIGMENT,
     '8863': EtherType.PPPoE_DISCOVERY_STAGE,
-    '8864': EtherType.PPPoE_SESSION_STAGE
+    '8864': EtherType.PPPoE_SESSION_STAGE,
+
+    '2000': EtherType.CDP,
+    '2004': EtherType.DTP,
+    '010B': EtherType.PVSTP_PLUS,
 }
 
 
@@ -61,16 +70,18 @@ class IEEE_SAP(Enum):
     LLC_SM_G: str = "LLC Sublayer Management / Group"
     IP: str = "IP (DoD Internet Protocol)"
     PROWAY_NETWORK_MANAGEMENT: str = "PROWAY (IEC 955) Network Management, Maintenance and Installation"
-    BPDU: str = "Bridge Protocol Data Unit (BPDU)"
     MMS: str = "Manufacturing Message Specification (MMS)"
     ISI_IP: str = "ISI IP"
     X25_PLP: str = "X.25 Packet Layer Protocol (PLP)"
     PROWAY_ACTIVE_STATION_LIST_MAITENANCE: str = "PROWAY (IEC 955) Active Station List Maintenance"
     SNAP: str = "SNAP (Subnetwork Access Protocol / non-IEEE SAPs)"
-    IPX: str = "IPX (Novell NetWare)"
+    IPX: str = "IPX" # Novell IPX
     LAN_MANAGMENT: str = "LAN Management"
     ISO: str = "ISO Network Layer Protocol"
     GLOBAL_DSAP: str = "Global DSAP"
+    
+    NETBIOS: str = "NetBIOS"
+    STP: str = "STP" # Spanning Tree Protocol
     
     UNKNOWN: str = "Unknown"
 
@@ -81,7 +92,7 @@ IEEE_SAPs = {
     '03': IEEE_SAP.LLC_SM_G,
     '06': IEEE_SAP.IP,
     '0E': IEEE_SAP.PROWAY_NETWORK_MANAGEMENT,
-    '42': IEEE_SAP.BPDU,
+    '42': IEEE_SAP.STP,
     '4E': IEEE_SAP.MMS,
     '5E': IEEE_SAP.ISI_IP,
     '7E': IEEE_SAP.X25_PLP,
@@ -91,4 +102,5 @@ IEEE_SAPs = {
     'F4': IEEE_SAP.LAN_MANAGMENT,
     'FE': IEEE_SAP.ISO,
     'FF': IEEE_SAP.GLOBAL_DSAP,
+    'F0': IEEE_SAP.NETBIOS,
 }
