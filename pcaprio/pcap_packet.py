@@ -1,13 +1,15 @@
 import binascii
 
 
-
 from dataclasses import dataclass
 from dataclasses import field
-from .frames_types import IEEE_802_3_LLC_SNAP_Frame, IEEE_802_3_LLC_Frame, identify_frame
+from .frames_types import Ethernet2Frame, IEEE_802_3_LLC_SNAP_Frame
+from .frames_types import IEEE_802_3_LLC_Frame
+from .frames_types import identify_frame
 from .frames_types import PCAPFrame
-from .enumerations import FrameType
+from .enumerations import AppPort, EtherType, FrameType
 from .utils import beautiful_hex
+
 
 
 @dataclass
@@ -67,8 +69,7 @@ class PCAPPacket:
             'len_frame_medium': self.medium_len,
             'frame_type': self.frame.frame_type.value,
             'src_mac': self.frame.source_mac,
-            'dst_mac': self.frame.destination_mac,
-            'hexa_frame': self.beautiful_hexlify_data
+            'dst_mac': self.frame.destination_mac
         }
 
         if isinstance(self.frame, IEEE_802_3_LLC_SNAP_Frame):
@@ -76,5 +77,31 @@ class PCAPPacket:
         
         if isinstance(self.frame, IEEE_802_3_LLC_Frame):
             res['sap'] = self.frame.DSAP.value
+        
+        if isinstance(self.frame, Ethernet2Frame):
+            if self.frame.ether_type != EtherType.UNKNOWN:
+                res['ether_type'] = self.frame.ether_type.value
+            
+            if self.frame.source_ip:
+                res['src_ip'] = self.frame.source_ip
+            
+            if self.frame.destination_ip:
+                res['dst_ip'] = self.frame.destination_ip
+            
+            if self.frame.communication_protocol:
+                res['protocol'] = self.frame.communication_protocol.value
+            
+            if self.frame.source_app_port:
+                res['src_port'] = self.frame.source_app_port
+            
+            if self.frame.destination_app_port:
+                res['dst_port'] = self.frame.destination_app_port
+            
+            if self.frame.source_app and self.frame.source_app != AppPort.UNKNOWN:
+                res['app_protocol'] = self.frame.source_app.value
+            elif self.frame.destination_app and self.frame.destination_app != AppPort.UNKNOWN:
+                res['app_protocol'] = self.frame.destination_app.value
+        
+        res['hexa_frame'] = self.beautiful_hexlify_data
         
         return res
