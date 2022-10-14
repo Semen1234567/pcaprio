@@ -1,7 +1,12 @@
 import binascii
+from curses import raw
 
 from dataclasses import dataclass
 from dataclasses import field
+
+from pcaprio.utils import repr_IPv4, repr_IPv6
+from .enumerations import AppPort, app_ports, CommunicationProtocol
+from .enumerations import communication_protocols
 from .enumerations import FrameType
 from .enumerations import EtherTypes
 from .enumerations import EtherType
@@ -17,11 +22,13 @@ class PCAPFrame:
     frame_type: FrameType = None
     isl: bytes = None
 
-    def __init__(self, destination_mac: str, source_mac: str, frame_type: FrameType = None, isl: bytes = None) -> None:
+
+    def __init__(self, destination_mac: str, source_mac: str, frame_type: FrameType = None, isl: bytes = None, raw: bytes = None) -> None:
         self.destination_mac = destination_mac
         self.source_mac = source_mac
         self.frame_type = frame_type
         self.isl = isl
+        self.raw = raw
     
     def __repr__(self) -> str:
         return f'<PCAPPacketParsedView: {self.destination_mac} -> {self.source_mac} ({self.frame_type.__repr__()})>'
@@ -34,14 +41,52 @@ class Ethernet2Frame(PCAPFrame):
     data: bytes
     ether_type: str = field(default=None)
     isl: bytes = field(repr=False, default=None)
+    
+    source_ip: str = field(default=None)
+    source_app_port: int = field(default=None)
+    source_app: AppPort = field(default=None)
+    destination_ip: str = field(default=None)
+    destination_app_port: int = field(default=None)
+    destination_app: AppPort = field(default=None)
 
+    communication_protocol: CommunicationProtocol = field(default=None)
 
     ether_type_code: str = field(repr=False, default=None)
+    raw: bytes = field(repr=False, default=None)
     frame_type: FrameType = FrameType.Ethernet2
 
     def __post_init__(self) -> None:
         self.ether_type_code = self.ether_type_code.upper()
         self.ether_type = EtherTypes.get(self.ether_type_code, EtherType.UNKNOWN)
+
+        self._get_source_and_destination_ip()
+    
+    def _get_source_and_destination_ip(self) -> None:
+        match self.ether_type:
+            case EtherType.IPv4:
+                self.source_ip = repr_IPv4(self.raw[26:30])
+                self.source_app_port = int.from_bytes(self.raw[34:36], byteorder='big')
+                self.destination_ip = repr_IPv4(self.raw[30:34])
+                self.destination_app_port = int.from_bytes(self.raw[36:38], byteorder='big')
+
+                self._get_communication_protocol_ipv4()
+                self._identify_app_by_port()
+            
+            case EtherType.IPv6:
+                self.source_ip = repr_IPv6(self.raw[22:38])
+                self.destination_ip = repr_IPv6(self.raw[38:54])
+            
+            case EtherType.ARP:
+                self.source_ip = repr_IPv4(self.raw[28:32])
+                self.destination_ip = repr_IPv4(self.raw[38:42])
+    
+    def _get_communication_protocol_ipv4(self) -> None:
+        self.communication_protocol = communication_protocols.get(self.raw[23], CommunicationProtocol.UNKNOWN)
+    
+    def _identify_app_by_port(self) -> None:
+        self.source_app = app_ports.get(self.source_app_port, AppPort.UNKNOWN)
+        
+        self.destination_app = app_ports.get(self.destination_app_port, AppPort.UNKNOWN)
     
     @property
     def hexlify_data(self) -> str:
@@ -60,6 +105,7 @@ class IEEE_802_3_LLC_BASE_Frame(PCAPFrame):
 
     DSAP_code: str = field(repr=False, default=None)
     SSAP_code: str = field(repr=False, default=None)
+    raw: bytes = field(repr=False, default=None)
 
     def __post_init__(self) -> None:
         self.control = self.control.upper()
@@ -115,7 +161,8 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
             source_mac=source_mac,
             ether_type_code=raw_data[12:14].hex(),
             data=raw_data[14:],
-            isl=isl
+            isl=isl,
+            raw=raw_data
         )
     elif int.from_bytes(raw_data[12:14], 'big') < 1500:
         if raw_data[14:16].hex().upper() == "AAAA":
@@ -128,14 +175,16 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
                 vemdor_code=raw_data[17:20].hex(),
                 ether_type_code=raw_data[20:22].hex(),
                 data=raw_data[22:],
-                isl=isl
+                isl=isl,
+                raw=raw_data
             )
         elif raw_data[14:16].hex().upper() == "FFFF":
             return PCAPFrame(
                 destination_mac=destination_mac,
                 source_mac=source_mac,
                 frame_type=FrameType.Novell_802_3_Raw,
-                isl=isl
+                isl=isl,
+                raw=raw_data
             )
         else:
             return IEEE_802_3_LLC_Frame(
@@ -145,5 +194,6 @@ def identify_frame(raw_data: bytes) -> PCAPFrame:
                 SSAP_code=raw_data[15:16].hex(),
                 control=raw_data[16:17].hex(),
                 data=raw_data[17:],
-                isl=isl
+                isl=isl,
+                raw=raw_data
             )
