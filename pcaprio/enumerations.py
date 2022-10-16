@@ -10,7 +10,59 @@ class FrameType(Enum):
     IEEE_802_3_LLC_SNAP: str = "IEEE 802.3 LLC & SNAP"
 
 
-class AppPort(Enum):
+icmp_types = {
+    (0, 0): "Echo Reply",
+    (3, 0): "Destination Network Unreachable",
+    (3, 1): "Destination Host Unreachable",
+    (3, 2): "Destination Protocol Unreachable",
+    (3, 3): "Destination Port Unreachable",
+    (3, 4): "Fragmentation Needed and Don't Fragment was Set",
+    (3, 5): "Source Route Failed",
+    (3, 6): "Destination Network Unknown",
+    (3, 7): "Destination Host Unknown",
+    (3, 8): "Source Host Isolated",
+    (3, 9): "Destination Network Administratively Prohibited",
+    (3, 10): "Destination Host Administratively Prohibited",
+    (3, 11): "Network Unreachable for Type of Service",
+    (3, 12): "Host Unreachable for Type of Service",
+    (3, 13): "Communication Administratively Prohibited by Filtering",
+    (4, 0): "Source Quench",
+    (5, 0): "Redirect Datagram for the Network",
+    (5, 1): "Redirect Datagram for the Host",
+    (5, 2): "Redirect Datagram for the Type of Service and Network",
+    (5, 3): "Redirect Datagram for the Type of Service and Host",
+    (8, 0): "Echo Request",
+    (9, 0): "Router Advertisement",
+    (10, 0): "Router Solicitation",
+    (11, 0): "Time Exceeded for Transit",
+    (11, 1): "Fragment Reassembly Time Exceeded",
+    (12, 0): "Pointer indicates the error",
+    (12, 1): "Missing a Required Option",
+    (12, 2): "Bad Length",
+    (13, 0): "Timestamp",
+    (14, 0): "Timestamp Reply",
+    (15, 0): "Information Request",
+    (16, 0): "Information Reply",
+    (17, 0): "Address Mask Request",
+    (18, 0): "Address Mask Reply",
+    (30, 0): "Traceroute"
+}
+
+
+class TCPFlag:
+    """Enumeration of the different types of TCP flags."""
+    SYN: int = 0x02
+    ACK: int = 0x10
+    RST: int = 0x04
+    FIN: int = 0x01
+    PSH: int = 0x08
+    
+    UNKNOWN: int = 0x00
+
+
+class AppProtocol: ...
+
+class TCPAppProtocol(AppProtocol, Enum):
     ECHO: str = "ECHO"
     CHARGEB: str = "CHARGEN"
     SSH: str = "SSH"
@@ -29,7 +81,6 @@ class AppPort(Enum):
     LDAP: str = "LDAP"
     TIME: str = "TIME"
     DHCP: str = "DHCP"
-    TFTP: str = "TFTP"
     NETBIOS_NS: str = "NETBIOS-NS"
     NETBIOS_DGM: str = "NETBIOS-DGM"
     SNMP: str = "SNMP"
@@ -44,39 +95,48 @@ class AppPort(Enum):
 
     UNKNOWN: str = "UNKNOWN"
 
-app_ports = {
-    7: AppPort.ECHO,
-    19: AppPort.CHARGEB,
-    20: AppPort.FTP_DATA,
-    21: AppPort.FTP_CONTROL,
-    22: AppPort.SSH,
-    23: AppPort.TELNET,
-    25: AppPort.SMTP,
-    37: AppPort.TIME,
-    53: AppPort.DNS,
-    67: AppPort.DHCP,
-    69: AppPort.TFTP,
-    79: AppPort.FINGER,
-    80: AppPort.HTTP,
-    110: AppPort.POP3,
-    111: AppPort.SUNRPC,
-    119: AppPort.NNTP,
-    137: AppPort.NETBIOS_NS,
-    138: AppPort.NETBIOS_DGM,
-    139: AppPort.NETBIOS_SSN,
-    143: AppPort.IMAP,
-    161: AppPort.SNMP,
-    162: AppPort.SNMP_TRAP,
-    179: AppPort.BGP,
-    389: AppPort.LDAP,
-    443: AppPort.HTTPS,
-    445: AppPort.MICROSOFT_DS,
-    514: AppPort.SYSLOG,
-    520: AppPort.RIP,
-    1080: AppPort.SOCKS,
-    33434: AppPort.TRACEROUTE,
+class UDPAppProtocol(AppProtocol, Enum):
+    TFTP: str = "TFTP"
+    
+    UNKNOWN: str = "UNKNOWN"
 
-    -1: AppPort.UNKNOWN
+
+tcp_app_ports = {
+    7: TCPAppProtocol.ECHO,
+    19: TCPAppProtocol.CHARGEB,
+    20: TCPAppProtocol.FTP_DATA,
+    21: TCPAppProtocol.FTP_CONTROL,
+    22: TCPAppProtocol.SSH,
+    23: TCPAppProtocol.TELNET,
+    25: TCPAppProtocol.SMTP,
+    37: TCPAppProtocol.TIME,
+    53: TCPAppProtocol.DNS,
+    67: TCPAppProtocol.DHCP,
+    79: TCPAppProtocol.FINGER,
+    80: TCPAppProtocol.HTTP,
+    110: TCPAppProtocol.POP3,
+    111: TCPAppProtocol.SUNRPC,
+    119: TCPAppProtocol.NNTP,
+    137: TCPAppProtocol.NETBIOS_NS,
+    138: TCPAppProtocol.NETBIOS_DGM,
+    139: TCPAppProtocol.NETBIOS_SSN,
+    143: TCPAppProtocol.IMAP,
+    161: TCPAppProtocol.SNMP,
+    162: TCPAppProtocol.SNMP_TRAP,
+    179: TCPAppProtocol.BGP,
+    389: TCPAppProtocol.LDAP,
+    443: TCPAppProtocol.HTTPS,
+    445: TCPAppProtocol.MICROSOFT_DS,
+    514: TCPAppProtocol.SYSLOG,
+    520: TCPAppProtocol.RIP,
+    1080: TCPAppProtocol.SOCKS,
+    33434: TCPAppProtocol.TRACEROUTE,
+
+    -1: TCPAppProtocol.UNKNOWN
+}
+
+udp_app_ports = {
+    69: UDPAppProtocol.TFTP
 }
 
 
