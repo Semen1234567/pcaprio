@@ -3,8 +3,8 @@ import yaml
 import argparse
 
 from pprint import pprint
-from pcaprio.enumerations import AppPort, EtherType
-from pcaprio.frames_types import Ethernet2Frame
+from pcaprio.enumerations import TCPAppProtocol, EtherType
+from pcaprio.pcap_frames import Ethernet2Frame
 from pcaprio.pcap_file import PCAPFile
 
 
@@ -27,10 +27,6 @@ args = parser.parse_args()
 
 input_file = os.path.abspath(args.input)
 output_file = os.path.abspath(args.output)
-
-print(args.protocol)
-print(input_file)
-print(output_file)
 
 
 pcapfile = PCAPFile().read(input_file)
@@ -57,7 +53,7 @@ for i, p in enumerate(pcapfile.read_packets(), 1):
             continue
 
         if p.frame.ether_type == EtherType.IPv4:
-            app = p.frame.source_app if p.frame.source_app != AppPort.UNKNOWN else p.frame.destination_app if p.frame.destination_app != AppPort.UNKNOWN else None
+            app = p.frame.source_app if p.frame.source_app != TCPAppProtocol.UNKNOWN else p.frame.destination_app if p.frame.destination_app != TCPAppProtocol.UNKNOWN else None
             if not app or app.value != args.protocol:
                 continue
         else:

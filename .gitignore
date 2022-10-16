@@ -1,3 +1,4 @@
 yamls/*
 pcaps/*
 */__pycache__/*
+*.txt

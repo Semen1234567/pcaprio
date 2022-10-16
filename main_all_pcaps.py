@@ -4,11 +4,12 @@ import yaml
 
 from pprint import pprint
 from pcaprio.enumerations import EtherType
-from pcaprio.frames_types import Ethernet2Frame
+from pcaprio.pcap_frames import Ethernet2Frame
 from pcaprio.pcap_file import PCAPFile
 
 
 
+# for PCAP_NAME in [os.listdir("pcaps")[-2]]:
 for PCAP_NAME in os.listdir("pcaps"):
     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
 
@@ -31,10 +32,10 @@ for PCAP_NAME in os.listdir("pcaps"):
     for i, p in enumerate(pcapfile.read_packets(), 1):
         p.parse()
         if isinstance(p.frame, Ethernet2Frame) and p.frame.ether_type == EtherType.IPv4:
-            if p.frame.source_ip in ipv4_senders:
-                ipv4_senders[p.frame.source_ip] += 1
+            if p.frame.source.ip in ipv4_senders:
+                ipv4_senders[p.frame.source.ip] += 1
             else:
-                ipv4_senders[p.frame.source_ip] = 1
+                ipv4_senders[p.frame.source.ip] = 1
 
         res["packets"].append(p.as_dict(i))
     
