@@ -3,11 +3,11 @@ import binascii
 
 from dataclasses import dataclass
 from dataclasses import field
-from .frames_types import Ethernet2Frame, IEEE_802_3_LLC_SNAP_Frame
-from .frames_types import IEEE_802_3_LLC_Frame
-from .frames_types import identify_frame
-from .frames_types import PCAPFrame
-from .enumerations import AppPort, EtherType, FrameType
+from .pcap_frames import Ethernet2Frame, IEEE_802_3_LLC_SNAP_Frame
+from .pcap_frames import IEEE_802_3_LLC_Frame
+from .pcap_frames import identify_frame
+from .pcap_frames import PCAPFrame
+from .enumerations import TCPAppProtocol, EtherType, FrameType
 from .utils import beautiful_hex
 
 
@@ -22,6 +22,7 @@ class PCAPPacket:
 
     raw: bytes = field(repr=False, default=None)
     frame: PCAPFrame = field(default=None)
+    frame_number: int = field(init=False, default=-1)
 
 
     @property
@@ -60,6 +61,8 @@ class PCAPPacket:
 
 
     def parse(self) -> None:
+        if self.frame:
+            return
         self.frame = identify_frame(self.data)
     
     def as_dict(self, frame_number: int = None) -> dict:
@@ -68,8 +71,8 @@ class PCAPPacket:
             'len_frame_pcap': self.incl_len,
             'len_frame_medium': self.medium_len,
             'frame_type': self.frame.frame_type.value,
-            'src_mac': self.frame.source_mac,
-            'dst_mac': self.frame.destination_mac
+            'src_mac': self.frame.source.mac,
+            'dst_mac': self.frame.destination.mac
         }
 
         if isinstance(self.frame, IEEE_802_3_LLC_SNAP_Frame):
@@ -81,26 +84,40 @@ class PCAPPacket:
         if isinstance(self.frame, Ethernet2Frame):
             if self.frame.ether_type != EtherType.UNKNOWN:
                 res['ether_type'] = self.frame.ether_type.value
+
+            if self.frame.arp_opcode != None:
+                res['arp_opcode'] = self.frame.arp_opcode
+
+            if self.frame.source.ip:
+                res['src_ip'] = self.frame.source.ip
             
-            if self.frame.source_ip:
-                res['src_ip'] = self.frame.source_ip
+            if self.frame.destination.ip:
+                res['dst_ip'] = self.frame.destination.ip
             
-            if self.frame.destination_ip:
-                res['dst_ip'] = self.frame.destination_ip
+            if self.frame.ip_id:
+                res['id'] = self.frame.ip_id
+
+            if self.frame.fragment_offset != -1:
+                res['flags_mf'] = self.frame.more_fragments
+                res['frag_offset'] = self.frame.fragment_offset
             
             if self.frame.communication_protocol:
                 res['protocol'] = self.frame.communication_protocol.value
             
-            if self.frame.source_app_port:
-                res['src_port'] = self.frame.source_app_port
+            if self.frame.icmp_type != None:
+                res['icmp_type'] = self.frame.icmp_type
             
-            if self.frame.destination_app_port:
-                res['dst_port'] = self.frame.destination_app_port
+            if self.frame.source.port:
+                res['src_port'] = self.frame.source.port
             
-            if self.frame.source_app and self.frame.source_app != AppPort.UNKNOWN:
-                res['app_protocol'] = self.frame.source_app.value
-            elif self.frame.destination_app and self.frame.destination_app != AppPort.UNKNOWN:
-                res['app_protocol'] = self.frame.destination_app.value
+            if self.frame.destination.port:
+                res['dst_port'] = self.frame.destination.port
+            
+            if self.frame.source.app and self.frame.source.app != TCPAppProtocol.UNKNOWN:
+                res['app_protocol'] = self.frame.source.app.value
+            
+            elif self.frame.destination.app and self.frame.destination.app != TCPAppProtocol.UNKNOWN:
+                res['app_protocol'] = self.frame.destination.app.value
         
         res['hexa_frame'] = self.beautiful_hexlify_data
         
