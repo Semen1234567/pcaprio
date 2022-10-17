@@ -11,14 +11,6 @@ from .pcap_frames import PCAPFrame
 from .enumerations import TCPAppProtocol, EtherType, FrameType
 from .utils import beautiful_hex
 
-def frame_number_gen() -> Generator[int, None, None]:
-    index = 1
-    while True:
-        yield index
-        index += 1
-
-fnum = frame_number_gen()
-
 @dataclass
 class PCAPPacket:
     timestamp1: int
@@ -29,8 +21,7 @@ class PCAPPacket:
 
     raw: bytes = field(repr=False, default=None)
     frame: PCAPFrame = field(default=None)
-    frame_number: int = field(init=False, default=-1)
-
+    frame_number: int = field(default=-1)
 
     @property
     def hexlify_data(self) -> str:
@@ -65,9 +56,6 @@ class PCAPPacket:
 ⠀⠀⠀⠀⠀⠀⠀⠀⠸⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡟⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
         """
         return 64 if self.incl_len <= 60 else self.incl_len + 4
-    
-    def __post__init__(self):
-        self.frame_number =  next(fnum)
 
     def parse(self) -> None:
         if self.frame:
@@ -75,9 +63,9 @@ class PCAPPacket:
         self.frame = identify_frame(self.data)
         return self
     
-    def as_dict(self, frame_number: int = None) -> dict:
+    def as_dict(self) -> dict:
         res = {
-            'frame_number': frame_number if frame_number != None else self.frame_number,
+            'frame_number': self.frame_number,
             'len_frame_pcap': self.incl_len,
             'len_frame_medium': self.medium_len,
             'frame_type': self.frame.frame_type.value,
@@ -96,7 +84,7 @@ class PCAPPacket:
                 res['ether_type'] = self.frame.ether_type.value
 
             if self.frame.arp_opcode != None:
-                res['arp_opcode'] = self.frame.arp_opcode
+                res['arp_opcode'] = self.frame.arp_opcode.value
 
             if self.frame.source.ip:
                 res['src_ip'] = self.frame.source.ip

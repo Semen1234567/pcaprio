@@ -70,15 +70,6 @@ class Ethernet2Frame(PCAPFrame):
         self._get_source_and_destination_ip()
     
     @property
-    def arp_opcode(self) -> str | None:
-        if self.ether_type != EtherType.ARP:
-            return None
-        if self.raw[20:22] == b'\x00\x01':
-            return "REQUEST"
-        elif self.raw[20:22] == b'\x00\x02':
-            return "REPLY"
-    
-    @property
     def icmp_type(self) -> str | None:
         if self.communication_protocol == CommunicationProtocol.ICMP:
             return icmp_types.get((self.raw[34], self.raw[35]), "UNKNOWN")

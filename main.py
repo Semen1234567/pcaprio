@@ -1,21 +1,60 @@
+import logging
 import os
-from typing import Generator
-import yaml
+import time
 import argparse
 
-from pprint import pprint
-from pcaprio.enumerations import TCPAppProtocol, EtherType, UDPAppProtocol
-from pcaprio.pcap_frames import Ethernet2Frame
-from pcaprio.pcap_file import PCAPFile
-
-from pcaprio.filters.tcp_conversations import TCPConversationsFilter
-from pcaprio.filters.tftp_conversations import TFTPConversationsFilter
-from pcaprio.filters.icmp_conversations import ICMPConversationsFilter
-from pcaprio.filters.arp_conversations import ARPConversationsFilter
+from typing import Generator
+from pcap_filter import collect_data_by_protocol
+from pcap_statistics import collect_statistics
 
 
 
-parser = argparse.ArgumentParser(description='PKS WTF')
+class ColoredLogger(logging.Logger):
+    def __init__(self, name, level=logging.NOTSET):
+        super().__init__(name, level)
+
+    def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False):
+        if level == logging.ERROR:
+            msg = f"\033[91m{msg}\033[0m"
+        elif level == logging.WARNING:
+            msg = f"\033[93m{msg}\033[0m"
+        elif level == logging.INFO:
+            msg = f"\033[92m{msg}\033[0m"
+        super()._log(level, msg, args, exc_info, extra, stack_info)
+
+def ticker_string(string: str) -> Generator[str, None, None]:
+    string = " "*50 + string + " "*5
+    while string:
+        yield string[:50]
+        string = string[1:]
+
+
+logger = ColoredLogger("pcaprio")
+
+
+logo = """
+██▓███   ▄████▄   ▄▄▄       ██▓███   ██▀███   ██▓ ▒█████  
+▓██░  ██▒▒██▀ ▀█  ▒████▄    ▓██░  ██▒▓██ ▒ ██▒▓██▒▒██▒  ██▒
+▓██░ ██▓▒▒▓█    ▄ ▒██  ▀█▄  ▓██░ ██▓▒▓██ ░▄█ ▒▒██▒▒██░  ██▒
+▒██▄█▓▒ ▒▒▓▓▄ ▄██▒░██▄▄▄▄██ ▒██▄█▓▒ ▒▒██▀▀█▄  ░██░▒██   ██░
+▒██▒ ░  ░▒ ▓███▀ ░ ▓█   ▓██▒▒██▒ ░  ░░██▓ ▒██▒░██░░ ████▓▒░
+▒▓▒░ ░  ░░ ░▒ ▒  ░ ▒▒   ▓▒█░▒▓▒░ ░  ░░ ▒▓ ░▒▓░░▓  ░ ▒░▒░▒░ 
+░▒ ░       ░  ▒     ▒   ▒▒ ░░▒ ░       ░▒ ░ ▒░ ▒ ░  ░ ▒ ▒░ 
+░░       ░          ░   ▒   ░░         ░░   ░  ▒ ░░ ░ ░ ▒  
+         ░ ░            ░  ░            ░      ░      ░ ░  
+         ░                                                
+                    PCAP FILE ANALYZER
+"""
+
+
+parser = argparse.ArgumentParser()
+parser.print_help_old = parser.print_help
+parser.print_help = lambda : (print(logo), parser.print_help_old())
+
+parser.add_argument(
+    "--заповiт", help="На щасття........", action="store_true"
+)
+
 parser.add_argument(
     '-p', '--protocol', help="Filter by protocol", type=str, default=None
 )
@@ -25,130 +64,23 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-o', '--output', help="Output file", type=str, default=None, required=True
+    '-o', '--output', help="Output file", type=str, default="test.yaml"
 )
 
 
 args = parser.parse_args()
 
+if args.заповiт:
+    for i in ticker_string("Як умру, то поховайте Мене на могилі Серед степу широкого На Вкраїні милій, Щоб лани широкополі, І Дніпро, і кручі Було видно, було чути, Як реве ревучий. Як понесе з України У синєє море Кров ворожу... отойді я І лани і гори — Все покину, і полину До самого Бога Молитися... а до того Я не знаю Бога. Поховайте та вставайте, Кайдани порвіте І вражою злою кров’ю Волю окропіте. І мене в сем’ї великій, В сем’ї вольній, новій, Не забудьте пом’янути Незлим тихим словом."):
+        print(i, end="\r")
+        time.sleep(0.1)
+
+
 input_file = os.path.abspath(args.input)
 output_file = os.path.abspath(args.output)
+
 if args.protocol:
     protocol = args.protocol.upper()
+    collect_data_by_protocol(protocol, input_file, output_file)
 else:
-    protocol = None
-
-
-pcapfile = PCAPFile().read(input_file)
-
-res = {
-    "name": "PKS2022/23",
-    "max_send_packets_by": [],
-    "pcap_name": input_file,
-}
-
-if (TCPAppProtocol(protocol) != TCPAppProtocol.UNKNOWN or protocol == "TCP" or 
-    UDPAppProtocol(protocol) != UDPAppProtocol.UNKNOWN or
-    protocol == "ICMP" or
-    protocol == "ARP" 
-    ):
-    res["complete_comms"] = []
-    res["partial_comms"] = []
-
-
-if TCPAppProtocol(protocol) != TCPAppProtocol.UNKNOWN or protocol == "TCP":
-    if protocol != "TCP":
-        cf = TCPConversationsFilter(pcapfile.read_packets(), lambda x: x.frame.source.app == TCPAppProtocol(protocol) or x.frame.destination.app == TCPAppProtocol(protocol))
-    else:
-        cf = TCPConversationsFilter(pcapfile.read_packets())
-
-    cf.distribute_by_tcp_conversation()
-    complete_comms_id = 1
-    partial_comms_id = 1
-
-    for k, v in cf.sort_conversations().items():
-        conv_sides = [s.split(':')[0] for s in k.split("->")]
-        val = cf.get_conversation_completeness(v)
-        is_complete = cf.conversation_completeness_fill(val)
-        if is_complete[0] == "COMPLETE":
-            res["complete_comms"].append({
-                "number_comm": complete_comms_id,
-                "src_comm": conv_sides[0],
-                "dst_comm": conv_sides[1],
-                "packets": [p.as_dict() for p in v]
-            })
-            complete_comms_id += 1
-        else:
-            res["partial_comms"].append({
-                "number_comm": partial_comms_id,
-                "packets": [p.as_dict() for p in v]
-            })
-            partial_comms_id += 1
-
-
-if UDPAppProtocol(protocol) != UDPAppProtocol.UNKNOWN:
-    cf = TFTPConversationsFilter(pcapfile.read_packets())
-    complete_comms_id = 1
-    
-    for conversation in cf.detect_tftp_conversations():
-        for p in conversation:
-            res["complete_comms"].append({
-                "number_comm": complete_comms_id,
-                "src_comm": v[0].frame.source.ip,
-                "dst_comm": v[0].frame.destination.ip,
-                "packets": [p.as_dict() for p in v]
-            })
-            complete_comms_id += 1
-        
-
-if protocol == "ICMP":
-    cf = ICMPConversationsFilter(pcapfile.read_packets())
-    
-    complete_comms_id = 1
-    partial_comms_id = 1
-    
-
-    for conversation in cf.detect_icmp_conversations():
-        is_complete = cf.is_conversation_complete(conversation)
-        if is_complete:
-            res["complete_comms"].append({
-                "number_comm": complete_comms_id,
-                "src_comm": conversation[0].frame.source.ip,
-                "dst_comm": conversation[0].frame.destination.ip,
-                "packets": [p.as_dict() for p in conversation]
-            })
-            complete_comms_id += 1
-        else:
-            res["partial_comms"].append({
-                "number_comm": partial_comms_id,
-                "packets": [p.as_dict() for p in conversation]
-            })
-            partial_comms_id += 1
-
-
-if protocol == "ARP":
-    cf = ARPConversationsFilter(pcapfile.read_packets())
-        
-    complete_comms_id = 1
-    partial_comms_id = 1
-    
-    for conversation, is_complet in cf.detect_arp_conversations():
-        is_complete = cf.is_conversation_complete(conversation)
-        if is_complete:
-            res["complete_comms"].append({
-                "number_comm": complete_comms_id,
-                "src_comm": conversation[0].frame.source.ip,
-                "dst_comm": conversation[0].frame.destination.ip,
-                "packets": [p.as_dict() for p in conversation]
-            })
-            complete_comms_id += 1
-        else:
-            res["partial_comms"].append({
-                "number_comm": partial_comms_id,
-                "packets": [p.as_dict() for p in conversation]
-            })
-            partial_comms_id += 1
-
-
-yaml.dump(res, open(output_file, 'w'), sort_keys=False)
-print("Wrote", output_file)
+    collect_statistics(input_file, output_file)

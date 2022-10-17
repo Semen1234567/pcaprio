@@ -2,6 +2,7 @@ import typing
 
 from .pcap_header import PCAPFileHeader
 from .pcap_packet import PCAPPacket
+from .utils import number_gen
 from io import IOBase
 
 
@@ -11,6 +12,7 @@ class PCAPFile:
         self._raw: bytes = b''
         self.header: PCAPFileHeader = None
         self.packets: list[PCAPPacket] = []
+        self.packet_num_gen = number_gen()
     
     def read(self, file: IOBase | str) -> 'PCAPFile':
         if isinstance(file, str):
@@ -69,11 +71,13 @@ class PCAPFile:
         frame_len = int.from_bytes(incl_len, 'little')
         data, self.data = self.data[:frame_len], self.data[frame_len:]
 
+
         return PCAPPacket(
             timestamp1=int.from_bytes(timestamp1, 'little'),
             timestamp2=int.from_bytes(timestamp2, 'little'),
             incl_len=int.from_bytes(incl_len, 'little'),
             orig_len=int.from_bytes(orig_len, 'little'),
             data=data,
-            raw=packet + data
+            raw=packet + data,
+            frame_number=next(self.packet_num_gen)
         )

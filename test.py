@@ -9,7 +9,6 @@ from pcaprio.pcap_file import PCAPFile
 
 
 
-
 # for PCAP_NAME in os.listdir("pcaps"):
 #     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
 #     print(PCAP_NAME, file=open("output.txt", "a"))
@@ -44,7 +43,7 @@ from pcaprio.pcap_file import PCAPFile
 
 #     cf = TFTPConversationsFilter(pcapfile.read_packets())
     
-#     for conversation in cf.detect_tftp_conversations():
+#     for conversation in cf.detect_conversations():
 #         print("---------------------"*10, file=open("output.txt", "a"))
 #         for p in conversation:
 #             print(p.frame, file=open("output.txt", "a"))
@@ -61,30 +60,6 @@ from pcaprio.pcap_file import PCAPFile
 
 
 
-# open("output.txt", "w")
-
-# for PCAP_NAME in os.listdir("pcaps"):
-#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
-#     print(PCAP_NAME, file=open("output.txt", "a"))
-
-#     pcapfile = PCAPFile().read(PCAP_NAME)
-
-
-#     cf = ICMPConversationsFilter(pcapfile.read_packets())
-    
-#     for conversation in cf.detect_icmp_conversations():
-#         print("---------------------"*10, file=open("output.txt", "a"))
-#         for p in conversation:
-#             print(p.frame.icmp_type, "----", p.frame, file=open("output.txt", "a"))
-        
-#         print("---------------------"*10, file=open("output.txt", "a"))
-    
-#     print(file=open("output.txt", "a"))
-
-
-
-
-
 open("output.txt", "w")
 
 for PCAP_NAME in os.listdir("pcaps"):
@@ -94,14 +69,37 @@ for PCAP_NAME in os.listdir("pcaps"):
     pcapfile = PCAPFile().read(PCAP_NAME)
 
 
-    cf = ARPConversationsFilter(pcapfile.read_packets())
+    cf = ICMPConversationsFilter(pcapfile.read_packets())
     
-    for conversation, is_complet in cf.detect_arp_conversations():
-        print(is_complet, "---------------------"*10, file=open("output.txt", "a"))
+    for conversation in cf.detect_conversations():
+        print(cf.is_conversation_complete(conversation), "---------------------"*10, file=open("output.txt", "a"))
         for p in conversation:
-            print(p.frame.arp_opcode, p.frame, file=open("output.txt", "a"))
+            print(p.frame.icmp_type, "----", p.frame, file=open("output.txt", "a"))
         
         print("---------------------"*10, file=open("output.txt", "a"))
     
     print(file=open("output.txt", "a"))
+
+
+
+
+
+# open("output.txt", "w")
+
+# for PCAP_NAME in os.listdir("pcaps"):
+#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
+#     print(PCAP_NAME, file=open("output.txt", "a"))
+
+#     pcapfile = PCAPFile().read(PCAP_NAME)
+
+#     cf = ARPConversationsFilter(pcapfile.read_packets())
+    
+#     for conversation in cf.detect_conversations():
+#         print(cf.is_conversation_complete(conversation), "---------------------"*10, file=open("output.txt", "a"))
+#         for p in conversation:
+#             print(p.frame.arp_opcode, p.frame, file=open("output.txt", "a"))
+        
+#         print("---------------------"*10, file=open("output.txt", "a"))
+    
+#     print(file=open("output.txt", "a"))
 

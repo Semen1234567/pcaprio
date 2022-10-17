@@ -1,4 +1,6 @@
 from typing import Generator, Iterable
+
+from .iconversations import IConversations
 from ..enumerations import CommunicationProtocol, EtherType
 from ..pcap_frames import Ethernet2Frame
 from ..pcap_packet import PCAPPacket
@@ -6,7 +8,7 @@ from .base_filter import BaseFilter
 
 
 
-class ICMPConversationsFilter:
+class ICMPConversationsFilter(IConversations):
     def __init__(self, packets: Iterable[PCAPPacket]):
         # Get all ICMP packets
         self._packets = BaseFilter(packets, [
@@ -15,7 +17,7 @@ class ICMPConversationsFilter:
                 lambda x: x.frame.communication_protocol == CommunicationProtocol.ICMP
             ]).filter_as_list()
     
-    def detect_icmp_conversations(self) -> Generator[list[PCAPPacket], None, None]:
+    def detect_conversations(self) -> Generator[list[PCAPPacket], None, None]:
         icmp_identifier_sequence_number_set = set()
 
         for p in self._packets:
@@ -32,5 +34,4 @@ class ICMPConversationsFilter:
             ]).filter_as_list()
     
     def is_conversation_complete(self, conversation: Iterable[PCAPPacket]) -> bool:
-        print(any([p.frame.icmp_type == "Echo Reply" for p in conversation]) and any([p.frame.icmp_type == "Echo Request" for p in conversation]))
         return any([p.frame.icmp_type == "Echo Reply" for p in conversation]) and any([p.frame.icmp_type == "Echo Request" for p in conversation])

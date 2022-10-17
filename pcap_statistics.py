@@ -1,24 +1,18 @@
-import os
 import yaml
 
 
-from pprint import pprint
 from pcaprio.enumerations import EtherType
 from pcaprio.pcap_frames import Ethernet2Frame
 from pcaprio.pcap_file import PCAPFile
 
 
-
-# for PCAP_NAME in [os.listdir("pcaps")[-2]]:
-for PCAP_NAME in os.listdir("pcaps"):
-    PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
-
-    pcapfile = PCAPFile().read(PCAP_NAME)
+def collect_statistics(input_file: str, output_file: str):
+    pcapfile = PCAPFile().read(input_file)
 
     res = {
         "name": "PKS2022/23",
         "max_send_packets_by": [],
-        "pcap_name": PCAP_NAME,
+        "pcap_name": input_file,
         "packets": [
 
         ],
@@ -29,7 +23,7 @@ for PCAP_NAME in os.listdir("pcaps"):
 
     }
 
-    for i, p in enumerate(pcapfile.read_packets(), 1):
+    for p in pcapfile.read_packets():
         p.parse()
         if isinstance(p.frame, Ethernet2Frame) and p.frame.ether_type == EtherType.IPv4:
             if p.frame.source.ip in ipv4_senders:
@@ -37,7 +31,7 @@ for PCAP_NAME in os.listdir("pcaps"):
             else:
                 ipv4_senders[p.frame.source.ip] = 1
 
-        res["packets"].append(p.as_dict(i))
+        res["packets"].append(p.as_dict())
     
     ipv4_senders = [
         {"node": k, "number_of_sent_packets": v} for k, v in ipv4_senders.items()
@@ -52,6 +46,5 @@ for PCAP_NAME in os.listdir("pcaps"):
     ]
     res["ipv4_senders"] = ipv4_senders
 
-    RES_NAME = PCAP_NAME.replace("pcap", "yaml")
-    yaml.dump(res, open(RES_NAME, 'w'), sort_keys=False)
-    print("Wrote", RES_NAME)
+    yaml.dump(res, open(output_file, 'w'), sort_keys=False)
+    print("Wrote", output_file)

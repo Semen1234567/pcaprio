@@ -13,29 +13,29 @@ class FrameType(Enum):
 class ARPOpcode(Enum):
     """Enumeration of the different types of ARP packages."""
 
-    Request: str = "ARP Request"
-    Reply: str = "ARP Reply"
-    RARP_Request: str = "RARP Request"
-    RARP_Reply: str = "RARP Reply"
-    DRARP_Request: str = "DRARP Request"
-    DRARP_Reply: str = "DRARP Reply"
-    DRARP_Error: str = "DRARP Error"
-    InARP_Request: str = "InARP Request"
-    InARP_Reply: str = "InARP Reply"
+    REQUEST: str = "ARP Request"
+    REPLY: str = "ARP Reply"
+    RARP_REQUEST: str = "RARP Request"
+    RARP_REPLY: str = "RARP Reply"
+    DRARP_REQUEST: str = "DRARP Request"
+    DRARP_REPLY: str = "DRARP Reply"
+    DRARP_ERROR: str = "DRARP Error"
+    INARP_REQUEST: str = "InARP Request"
+    INARP_REPLY: str = "InARP Reply"
     ARP_NAK: str = "ARP NAK"
 
     UNKNOWN: str = "UNKNOWN"
 
 arp_opcodes = {
-    1: ARPOpcode.Request,
-    2: ARPOpcode.Reply,
-    3: ARPOpcode.RARP_Request,
-    4: ARPOpcode.RARP_Reply,
-    5: ARPOpcode.DRARP_Request,
-    6: ARPOpcode.DRARP_Reply,
-    7: ARPOpcode.DRARP_Error,
-    8: ARPOpcode.InARP_Request,
-    9: ARPOpcode.InARP_Reply,
+    1: ARPOpcode.REQUEST,
+    2: ARPOpcode.REPLY,
+    3: ARPOpcode.RARP_REQUEST,
+    4: ARPOpcode.RARP_REPLY,
+    5: ARPOpcode.DRARP_REQUEST,
+    6: ARPOpcode.DRARP_REPLY,
+    7: ARPOpcode.DRARP_ERROR,
+    8: ARPOpcode.INARP_REQUEST,
+    9: ARPOpcode.INARP_REPLY,
     10: ARPOpcode.ARP_NAK,
 }
 
@@ -61,6 +61,7 @@ icmp_types = {
     (5, 1): "Redirect Datagram for the Host",
     (5, 2): "Redirect Datagram for the Type of Service and Network",
     (5, 3): "Redirect Datagram for the Type of Service and Host",
+    (7, 19): "Host Unreachable for Fragmentation",
     (8, 0): "Echo Request",
     (9, 0): "Router Advertisement",
     (10, 0): "Router Solicitation",
@@ -75,7 +76,10 @@ icmp_types = {
     (16, 0): "Information Reply",
     (17, 0): "Address Mask Request",
     (18, 0): "Address Mask Reply",
-    (30, 0): "Traceroute"
+    (30, 0): "Traceroute",
+    (97, 98): "Experimental Measurement",
+    (68, 36): "Mobile Host Redirect",
+
 }
 
 

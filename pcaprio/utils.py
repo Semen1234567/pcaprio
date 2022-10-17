@@ -1,4 +1,4 @@
-
+from typing import Generator
 
 
 def beautiful_hex(hex_data: str) -> str:
@@ -22,3 +22,10 @@ def repr_IPv6(raw: bytes) -> str:
         part = f'{raw[i]:02x}{raw[i+1]:02x}'
         res.append(part)
     return ':'.join(res)
+
+
+def number_gen() -> Generator[int, None, None]:
+    index = 1
+    while True:
+        yield index
+        index += 1

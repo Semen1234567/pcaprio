@@ -1,6 +1,8 @@
 from enum import Enum
 from pprint import pprint
-from typing import Callable, Iterable
+from typing import Callable, Generator, Iterable
+
+from .iconversations import IConversations
 from ..enumerations import CommunicationProtocol, EtherType
 from ..pcap_frames import Ethernet2Frame
 from ..pcap_packet import PCAPPacket
@@ -19,7 +21,7 @@ class TCP_COMPLETENESS:
     RST:     int = 0x20  # TCP RST     
 
 
-class TCPConversationsFilter:
+class TCPConversationsFilter(IConversations):
     def __init__(self, packets: Iterable[PCAPPacket], more_filters: Callable[[PCAPPacket], bool] = None):
         self._packets = BaseFilter(packets, [
             lambda x: isinstance(x.frame, Ethernet2Frame),
@@ -33,10 +35,10 @@ class TCPConversationsFilter:
         }
     
     @property
-    def conversations(self) -> dict[str, list[PCAPPacket]]:
-        return self._conversations
+    def conversations(self) -> Iterable[list[PCAPPacket]]:
+        return self._conversations.values()
     
-    def distribute_by_tcp_conversation(self):
+    def detect_conversations(self) -> Iterable[list[PCAPPacket]]:
         for i, p in enumerate(self._packets, 1):
             p.frame_number = i
 
@@ -51,6 +53,8 @@ class TCPConversationsFilter:
                 self._conversations[k2].append(p)
             else:
                 self._conversations[k1] = [p]
+        
+        return self.conversations
     
     def get_conversation_completeness(self, conversation: list[PCAPPacket]) -> int:
         """
@@ -132,3 +136,6 @@ class TCPConversationsFilter:
             s1[k] = sorted(s1[k], key=lambda x: x.frame_number)
         
         return s1
+    
+    def is_conversation_complete(self, conversation: list[PCAPPacket]) -> bool:
+        return self.conversation_completeness_fill(self.get_conversation_completeness(conversation))[0] == "COMPLETE"
