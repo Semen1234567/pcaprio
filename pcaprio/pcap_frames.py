@@ -18,6 +18,8 @@ from .enumerations import EtherType
 from .enumerations import IEEE_SAPs
 from .enumerations import IEEE_SAP
 from .enumerations import icmp_types
+from .enumerations import arp_opcodes
+from .enumerations import ARPOpcode
 
 
 @dataclass
@@ -82,6 +84,26 @@ class Ethernet2Frame(PCAPFrame):
             return icmp_types.get((self.raw[34], self.raw[35]), "UNKNOWN")
     
     @property
+    def icmp_data(self) -> bytes | None:
+        if self.communication_protocol == CommunicationProtocol.ICMP:
+            return self.raw[42:]
+    
+    @property
+    def icmp_checksum(self) -> int:
+        if self.communication_protocol == CommunicationProtocol.ICMP:
+            return int.from_bytes(self.raw[36:38], byteorder='big')
+
+    @property
+    def icmp_identifier(self) -> int:
+        if self.communication_protocol == CommunicationProtocol.ICMP:
+            return int.from_bytes(self.raw[38:40], byteorder='big')
+    
+    @property
+    def icmp_sequence_number(self) -> int:
+        if self.communication_protocol == CommunicationProtocol.ICMP:
+            return int.from_bytes(self.raw[40:42], byteorder='big')
+    
+    @property
     def TCP_flag(self) -> int:
         if self.communication_protocol == CommunicationProtocol.TCP:
             flag = int.from_bytes(self.raw[47:48], byteorder='big')
@@ -117,6 +139,11 @@ class Ethernet2Frame(PCAPFrame):
         if self.ether_type == EtherType.IPv4:
             return bool(int.from_bytes(self.raw[20:22], byteorder='big') & 0x2000)
         return False
+    
+    @property
+    def arp_opcode(self) -> str | None:
+        if self.ether_type == EtherType.ARP:
+            return arp_opcodes.get(int.from_bytes(self.raw[20:22], byteorder='big'), ARPOpcode.UNKNOWN)
         
     def _get_source_and_destination_ip(self) -> None:
         match self.ether_type:
@@ -129,6 +156,9 @@ class Ethernet2Frame(PCAPFrame):
                 if self.communication_protocol in [CommunicationProtocol.TCP, CommunicationProtocol.UDP]:
                     self.source.port = int.from_bytes(self.raw[34:36], byteorder='big')
                     self.destination.port = int.from_bytes(self.raw[36:38], byteorder='big')
+                
+                if self.communication_protocol == CommunicationProtocol.ICMP:
+                    ...
 
                 self._identify_app_by_port()
             

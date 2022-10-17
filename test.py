@@ -1,11 +1,91 @@
 import os
 
 from pprint import pprint
-from filters.communications import TCPCommunicationsFilter
+from pcaprio.filters.tcp_conversations import TCPConversationsFilter
+from pcaprio.filters.tftp_conversations import TFTPConversationsFilter
+from pcaprio.filters.icmp_conversations import ICMPConversationsFilter
+from pcaprio.filters.arp_conversations import ARPConversationsFilter
 from pcaprio.pcap_file import PCAPFile
 
 
 
+
+# for PCAP_NAME in os.listdir("pcaps"):
+#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
+#     print(PCAP_NAME, file=open("output.txt", "a"))
+
+#     pcapfile = PCAPFile().read(PCAP_NAME)
+
+
+#     cf = TCPConversationsFilter(pcapfile.read_packets())
+
+#     cf.distribute_by_tcp_conversation()
+    
+#     for k, v in cf.sort_conversations().items():
+#         val = cf.get_conversation_completeness(v)
+#         print(k, len(v), cf.conversation_completeness_fill(val), file=open("output.txt", "a"))
+    
+#     print(file=open("output.txt", "a"))
+
+
+
+
+
+
+
+# open("output.txt", "w")
+
+# for PCAP_NAME in os.listdir("pcaps"):
+#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
+#     print(PCAP_NAME, file=open("output.txt", "a"))
+
+#     pcapfile = PCAPFile().read(PCAP_NAME)
+
+
+#     cf = TFTPConversationsFilter(pcapfile.read_packets())
+    
+#     for conversation in cf.detect_tftp_conversations():
+#         print("---------------------"*10, file=open("output.txt", "a"))
+#         for p in conversation:
+#             print(p.frame, file=open("output.txt", "a"))
+        
+#         print("---------------------"*10, file=open("output.txt", "a"))
+    
+#     print(file=open("output.txt", "a"))
+
+
+
+
+
+
+
+
+
+# open("output.txt", "w")
+
+# for PCAP_NAME in os.listdir("pcaps"):
+#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
+#     print(PCAP_NAME, file=open("output.txt", "a"))
+
+#     pcapfile = PCAPFile().read(PCAP_NAME)
+
+
+#     cf = ICMPConversationsFilter(pcapfile.read_packets())
+    
+#     for conversation in cf.detect_icmp_conversations():
+#         print("---------------------"*10, file=open("output.txt", "a"))
+#         for p in conversation:
+#             print(p.frame.icmp_type, "----", p.frame, file=open("output.txt", "a"))
+        
+#         print("---------------------"*10, file=open("output.txt", "a"))
+    
+#     print(file=open("output.txt", "a"))
+
+
+
+
+
+open("output.txt", "w")
 
 for PCAP_NAME in os.listdir("pcaps"):
     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
@@ -14,12 +94,14 @@ for PCAP_NAME in os.listdir("pcaps"):
     pcapfile = PCAPFile().read(PCAP_NAME)
 
 
-    cf = TCPCommunicationsFilter(pcapfile.read_packets())
-
-    cf.distribute_by_tcp_communications()
-
-    for i in cf.sort_communications():
-        val = cf.get_conversation_completeness(cf.communications[i])
-        print(i, len(cf.communications[i]), cf.conversation_completeness_fill(val), file=open("output.txt", "a"))
+    cf = ARPConversationsFilter(pcapfile.read_packets())
+    
+    for conversation, is_complet in cf.detect_arp_conversations():
+        print(is_complet, "---------------------"*10, file=open("output.txt", "a"))
+        for p in conversation:
+            print(p.frame.arp_opcode, p.frame, file=open("output.txt", "a"))
+        
+        print("---------------------"*10, file=open("output.txt", "a"))
     
     print(file=open("output.txt", "a"))
+

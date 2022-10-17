@@ -1,10 +1,12 @@
 from enum import Enum
 from pprint import pprint
 from typing import Callable, Iterable
-from pcaprio.enumerations import CommunicationProtocol, EtherType
-from pcaprio.pcap_frames import Ethernet2Frame
-from pcaprio.pcap_packet import PCAPPacket
-from pcaprio.enumerations import TCPFlag
+from ..enumerations import CommunicationProtocol, EtherType
+from ..pcap_frames import Ethernet2Frame
+from ..pcap_packet import PCAPPacket
+from ..enumerations import TCPFlag
+from .base_filter import BaseFilter
+
 
 
 class TCP_COMPLETENESS:
@@ -17,44 +19,38 @@ class TCP_COMPLETENESS:
     RST:     int = 0x20  # TCP RST     
 
 
-class TCPCommunicationsFilter:
-    def __init__(self, packets: Iterable[PCAPPacket]):
-        self._packets = packets
+class TCPConversationsFilter:
+    def __init__(self, packets: Iterable[PCAPPacket], more_filters: Callable[[PCAPPacket], bool] = None):
+        self._packets = BaseFilter(packets, [
+            lambda x: isinstance(x.frame, Ethernet2Frame),
+            lambda x: x.frame.ether_type == EtherType.IPv4,
+            lambda x: x.frame.communication_protocol == CommunicationProtocol.TCP,
+            *([more_filters] if more_filters else [])
+        ]).filter()
         
-        self._communications: dict[str, list[PCAPPacket]] = {
+        self._conversations: dict[str, list[PCAPPacket]] = {
 
         }
     
     @property
-    def communications(self) -> dict[str, list[PCAPPacket]]:
-        return self._communications
+    def conversations(self) -> dict[str, list[PCAPPacket]]:
+        return self._conversations
     
-    @property
-    def packets(self) -> Iterable[PCAPPacket]:
-        return self._packets
-    
-    def distribute_by_tcp_communications(self):
+    def distribute_by_tcp_conversation(self):
         for i, p in enumerate(self._packets, 1):
-            p.parse()
             p.frame_number = i
 
-            if not isinstance(p.frame, Ethernet2Frame) or p.frame.ether_type != EtherType.IPv4:
-                continue
-            
-            if p.frame.communication_protocol != CommunicationProtocol.TCP:
-                continue
-            
             frame = p.frame
 
             k1 = f"{frame.source.ip}:{frame.source.port}->{frame.destination.ip}:{frame.destination.port}"
             k2 = f"{frame.destination.ip}:{frame.destination.port}->{frame.source.ip}:{frame.source.port}"
 
-            if k1 in self._communications:
-                self._communications[k1].append(p)
-            elif k2 in self._communications:
-                self._communications[k2].append(p)
+            if k1 in self._conversations:
+                self._conversations[k1].append(p)
+            elif k2 in self._conversations:
+                self._conversations[k2].append(p)
             else:
-                self._communications[k1] = [p]
+                self._conversations[k1] = [p]
     
     def get_conversation_completeness(self, conversation: list[PCAPPacket]) -> int:
         """
@@ -109,11 +105,11 @@ class TCPCommunicationsFilter:
 
         return conversation_completeness
 
-    # /*
-    # * display the TCP Conversation Completeness
-    # * we of course pay much attention on complete conversations but also incomplete ones which
-    # * have a regular start, as in practice we are often looking for such thing
-    # */
+    # 
+    # display the TCP Conversation Completeness
+    # we of course pay much attention on complete conversations but also incomplete ones which
+    # have a regular start, as in practice we are often looking for such thing
+    #
     @staticmethod
     def conversation_completeness_fill(value: int) -> str:
         return {
@@ -128,9 +124,9 @@ class TCPCommunicationsFilter:
             TCP_COMPLETENESS.SYNSENT|TCP_COMPLETENESS.SYNACK|TCP_COMPLETENESS.ACK|TCP_COMPLETENESS.RST: ("COMPLETE", "NO_DATA", value), 
             TCP_COMPLETENESS.SYNSENT|TCP_COMPLETENESS.SYNACK|TCP_COMPLETENESS.ACK|TCP_COMPLETENESS.FIN|TCP_COMPLETENESS.RST: ("COMPLETE", "NO_DATA", value)
         }.get(value, ("INCOMPLETE", "UNKNOWN", value))
-        
-    def sort_communications(self) -> dict[str, list[PCAPPacket]]:
-        s1 = dict(sorted(self._communications.items(), key=lambda x: len(x[1]), reverse=True))
+    
+    def sort_conversations(self) -> dict[str, list[PCAPPacket]]:
+        s1 = dict(sorted(self._conversations.items(), key=lambda x: len(x[1]), reverse=True))
 
         for k in s1:
             s1[k] = sorted(s1[k], key=lambda x: x.frame_number)

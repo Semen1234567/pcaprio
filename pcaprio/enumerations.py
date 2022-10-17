@@ -10,6 +10,36 @@ class FrameType(Enum):
     IEEE_802_3_LLC_SNAP: str = "IEEE 802.3 LLC & SNAP"
 
 
+class ARPOpcode(Enum):
+    """Enumeration of the different types of ARP packages."""
+
+    Request: str = "ARP Request"
+    Reply: str = "ARP Reply"
+    RARP_Request: str = "RARP Request"
+    RARP_Reply: str = "RARP Reply"
+    DRARP_Request: str = "DRARP Request"
+    DRARP_Reply: str = "DRARP Reply"
+    DRARP_Error: str = "DRARP Error"
+    InARP_Request: str = "InARP Request"
+    InARP_Reply: str = "InARP Reply"
+    ARP_NAK: str = "ARP NAK"
+
+    UNKNOWN: str = "UNKNOWN"
+
+arp_opcodes = {
+    1: ARPOpcode.Request,
+    2: ARPOpcode.Reply,
+    3: ARPOpcode.RARP_Request,
+    4: ARPOpcode.RARP_Reply,
+    5: ARPOpcode.DRARP_Request,
+    6: ARPOpcode.DRARP_Reply,
+    7: ARPOpcode.DRARP_Error,
+    8: ARPOpcode.InARP_Request,
+    9: ARPOpcode.InARP_Reply,
+    10: ARPOpcode.ARP_NAK,
+}
+
+
 icmp_types = {
     (0, 0): "Echo Reply",
     (3, 0): "Destination Network Unreachable",
@@ -95,10 +125,18 @@ class TCPAppProtocol(AppProtocol, Enum):
 
     UNKNOWN: str = "UNKNOWN"
 
+    @classmethod
+    def _missing_(cls, value):
+        return cls.UNKNOWN
+
 class UDPAppProtocol(AppProtocol, Enum):
     TFTP: str = "TFTP"
     
     UNKNOWN: str = "UNKNOWN"
+    
+    @classmethod
+    def _missing_(cls, value):
+        return cls.UNKNOWN
 
 
 tcp_app_ports = {

@@ -3,6 +3,7 @@ import binascii
 
 from dataclasses import dataclass
 from dataclasses import field
+from typing import Generator
 from .pcap_frames import Ethernet2Frame, IEEE_802_3_LLC_SNAP_Frame
 from .pcap_frames import IEEE_802_3_LLC_Frame
 from .pcap_frames import identify_frame
@@ -10,7 +11,13 @@ from .pcap_frames import PCAPFrame
 from .enumerations import TCPAppProtocol, EtherType, FrameType
 from .utils import beautiful_hex
 
+def frame_number_gen() -> Generator[int, None, None]:
+    index = 1
+    while True:
+        yield index
+        index += 1
 
+fnum = frame_number_gen()
 
 @dataclass
 class PCAPPacket:
@@ -58,16 +65,19 @@ class PCAPPacket:
 ⠀⠀⠀⠀⠀⠀⠀⠀⠸⣦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⡟⢸⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
         """
         return 64 if self.incl_len <= 60 else self.incl_len + 4
-
+    
+    def __post__init__(self):
+        self.frame_number =  next(fnum)
 
     def parse(self) -> None:
         if self.frame:
-            return
+            return self
         self.frame = identify_frame(self.data)
+        return self
     
     def as_dict(self, frame_number: int = None) -> dict:
         res = {
-            'frame_number': frame_number if frame_number != None else -1,
+            'frame_number': frame_number if frame_number != None else self.frame_number,
             'len_frame_pcap': self.incl_len,
             'len_frame_medium': self.medium_len,
             'frame_type': self.frame.frame_type.value,
