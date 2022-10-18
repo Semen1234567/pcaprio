@@ -9,24 +9,22 @@ from pcaprio.pcap_file import PCAPFile
 
 
 
-# for PCAP_NAME in os.listdir("pcaps"):
-#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
-#     print(PCAP_NAME, file=open("output.txt", "a"))
+for PCAP_NAME in os.listdir("pcaps"):
+    PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
+    print(PCAP_NAME, file=open("output.txt", "a"))
 
-#     pcapfile = PCAPFile().read(PCAP_NAME)
+    pcapfile = PCAPFile().read(PCAP_NAME)
 
 
-#     cf = TCPConversationsFilter(pcapfile.read_packets())
+    cf = TCPConversationsFilter(pcapfile.read_packets())
 
-#     cf.distribute_by_tcp_conversation()
+    cf.detect_conversations()
     
-#     for k, v in cf.sort_conversations().items():
-#         val = cf.get_conversation_completeness(v)
-#         print(k, len(v), cf.conversation_completeness_fill(val), file=open("output.txt", "a"))
+    for k, v in cf.sort_conversations().items():
+        val = cf.get_conversation_completeness(v)
+        print(k, len(v), cf.conversation_completeness_fill(val), file=open("output.txt", "a"))
     
-#     print(file=open("output.txt", "a"))
-
-
+    print(file=open("output.txt", "a"))
 
 
 
@@ -60,25 +58,25 @@ from pcaprio.pcap_file import PCAPFile
 
 
 
-open("output.txt", "w")
+# open("output.txt", "w")
 
-for PCAP_NAME in os.listdir("pcaps"):
-    PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
-    print(PCAP_NAME, file=open("output.txt", "a"))
+# for PCAP_NAME in os.listdir("pcaps"):
+#     PCAP_NAME = os.path.join("pcaps", PCAP_NAME)
+#     print(PCAP_NAME, file=open("output.txt", "a"))
 
-    pcapfile = PCAPFile().read(PCAP_NAME)
+#     pcapfile = PCAPFile().read(PCAP_NAME)
 
 
-    cf = ICMPConversationsFilter(pcapfile.read_packets())
+#     cf = ICMPConversationsFilter(pcapfile.read_packets())
     
-    for conversation in cf.detect_conversations():
-        print(cf.is_conversation_complete(conversation), "---------------------"*10, file=open("output.txt", "a"))
-        for p in conversation:
-            print(p.frame.icmp_type, "----", p.frame, file=open("output.txt", "a"))
+#     for conversation in cf.detect_conversations():
+#         print(cf.is_conversation_complete(conversation), "---------------------"*10, file=open("output.txt", "a"))
+#         for p in conversation:
+#             print(p.frame.icmp_type, "----", p.frame, file=open("output.txt", "a"))
         
-        print("---------------------"*10, file=open("output.txt", "a"))
+#         print("---------------------"*10, file=open("output.txt", "a"))
     
-    print(file=open("output.txt", "a"))
+#     print(file=open("output.txt", "a"))
 
 
 

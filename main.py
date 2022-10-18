@@ -8,9 +8,8 @@ from pcap_filter import collect_data_by_protocol
 from pcap_statistics import collect_statistics
 
 
-
 class ColoredLogger(logging.Logger):
-    def __init__(self, name, level=logging.NOTSET):
+    def __init__(self, name, level=logging.INFO):
         super().__init__(name, level)
 
     def _log(self, level, msg, args, exc_info=None, extra=None, stack_info=False):
@@ -30,6 +29,8 @@ def ticker_string(string: str) -> Generator[str, None, None]:
 
 
 logger = ColoredLogger("pcaprio")
+logger.setLevel(logging.INFO)
+
 
 
 logo = """
@@ -64,8 +65,9 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    '-o', '--output', help="Output file", type=str, default="test.yaml"
+    '-o', '--output', help="Output file", type=str, default=None
 )
+
 
 
 args = parser.parse_args()
@@ -76,11 +78,40 @@ if args.заповiт:
         time.sleep(0.1)
 
 
-input_file = os.path.abspath(args.input)
-output_file = os.path.abspath(args.output)
+input_files = []
+output_files = []
 
-if args.protocol:
-    protocol = args.protocol.upper()
-    collect_data_by_protocol(protocol, input_file, output_file)
+if os.path.isdir(args.input):
+    input_files = [os.path.abspath(os.path.join(args.input, f)) for f in os.listdir(args.input)]
+elif os.path.exists(args.input):
+    input_files = [os.path.abspath(args.input), ]
 else:
-    collect_statistics(input_file, output_file)
+    logger.error(f"{args.input} not found")
+    exit(1)
+
+
+if not args.output:
+    for f in input_files:
+        output_files.append(f"{f}.yaml")
+elif os.path.isdir(args.output):
+    output_files = [os.path.abspath(os.path.join(args.output, f"{f}.yaml")) for f in os.listdir(args.input)]
+elif len(input_files) == 1:
+    output_files = [os.path.abspath(args.output), ]
+else:
+    for f in input_files:
+        output_files.append(f"{f}.yaml")
+
+    
+for input_file, output_file in zip(input_files, output_files):
+    t1 = time.time()
+    if args.protocol:
+        protocol = args.protocol.upper()
+        collect_data_by_protocol(protocol, input_file, output_file)
+    else:
+        collect_statistics(input_file, output_file)
+    t2 = time.time()
+
+    print("-"*10)
+    print(f"Wrote {output_file}")
+    print(f"Time: {t2 - t1:.2f}s")
+    print("-"*10)

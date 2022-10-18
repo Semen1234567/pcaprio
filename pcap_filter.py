@@ -3,18 +3,17 @@ import sys
 import yaml
 
 
-from pcaprio.enumerations import TCPAppProtocol, EtherType, UDPAppProtocol
-from pcaprio.filters.iconversations import IConversations
-from pcaprio.pcap_frames import Ethernet2Frame
-from pcaprio.pcap_file import PCAPFile
+from pcaprio.enumerations import TCPAppProtocol, UDPAppProtocol
+from pcaprio import PCAPFile
 
-from pcaprio.filters.tcp_conversations import TCPConversationsFilter
-from pcaprio.filters.tftp_conversations import TFTPConversationsFilter
-from pcaprio.filters.icmp_conversations import ICMPConversationsFilter
-from pcaprio.filters.arp_conversations import ARPConversationsFilter
+from pcaprio.filters import TCPConversationsFilter
+from pcaprio.filters import TFTPConversationsFilter
+from pcaprio.filters import ICMPConversationsFilter
+from pcaprio.filters import ARPConversationsFilter
 
 
 logger = logging.getLogger("pcaprio")
+
 
 def collect_data_by_protocol(protocol: str | None, input_file: str, output_file: str):
     if not any((
@@ -63,13 +62,18 @@ def collect_data_by_protocol(protocol: str | None, input_file: str, output_file:
         else:
             res["partial_comms"].append({
                 "number_comm": partial_comms_id,
-                "src_comm": conversation[0].frame.source.ip,
-                "dst_comm": conversation[0].frame.destination.ip,
+                # "src_comm": conversation[0].frame.source.ip,
+                # "dst_comm": conversation[0].frame.destination.ip,
                 "packets": [p.as_dict() for p in conversation]
             })
             partial_comms_id += 1
+    
     if res["partial_comms"]:
-        res["partial_comms"] = res["partial_comms"][0] # :
+        res["partial_comms"] = [res["partial_comms"][0]] # : (
+    else:
+        res.pop("partial_comms")
+    
+    if not res["complete_comms"]:
+        res.pop("complete_comms")
 
     yaml.dump(res, open(output_file, 'w'), sort_keys=False)
-    print("Wrote", output_file)
