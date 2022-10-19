@@ -2,10 +2,13 @@ import logging
 import os
 import time
 import argparse
+import sys
+
 
 from typing import Generator
 from pcap_filter import collect_data_by_protocol
 from pcap_statistics import collect_statistics
+from emoj import kekw
 
 
 class ColoredLogger(logging.Logger):
@@ -26,6 +29,12 @@ def ticker_string(string: str) -> Generator[str, None, None]:
     while string:
         yield string[:50]
         string = string[1:]
+
+
+def my_except_hook(exctype, value, traceback):
+    if exctype == KeyboardInterrupt: print(kekw); sys.exit(0)
+    else: sys.__excepthook__(exctype, value, traceback)
+sys.excepthook = my_except_hook
 
 
 logger = ColoredLogger("pcaprio")
