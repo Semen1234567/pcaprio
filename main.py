@@ -4,7 +4,6 @@ import time
 import argparse
 import sys
 
-
 from typing import Generator
 from pcap_filter import collect_data_by_protocol
 from pcap_statistics import collect_statistics
@@ -110,7 +109,7 @@ else:
     for f in input_files:
         output_files.append(f"{f}.yaml")
 
-    
+
 for input_file, output_file in zip(input_files, output_files):
     t1 = time.time()
     if args.protocol:
