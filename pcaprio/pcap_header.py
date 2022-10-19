@@ -1,8 +1,6 @@
 from dataclasses import dataclass, field
 
 
-
-
 @dataclass(frozen=True)
 class PCAPFileHeader:
     magic_number: int = 0xa1b2c3d4

@@ -1,5 +1,3 @@
-
-
 from typing import Generator, Iterable
 
 from ..pcap_packet import PCAPPacket

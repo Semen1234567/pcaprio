@@ -1,7 +1,5 @@
 import binascii
 
-
-
 from dataclasses import dataclass
 from dataclasses import field
 

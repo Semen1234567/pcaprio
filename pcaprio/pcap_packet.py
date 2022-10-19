@@ -1,15 +1,14 @@
 import binascii
 
-
 from dataclasses import dataclass
 from dataclasses import field
-from typing import Generator
 from .pcap_frames import Ethernet2Frame, IEEE_802_3_LLC_SNAP_Frame
 from .pcap_frames import IEEE_802_3_LLC_Frame
 from .pcap_frames import identify_frame
 from .pcap_frames import PCAPFrame
-from .enumerations import TCPAppProtocol, EtherType, FrameType
+from .enumerations import TCPAppProtocol, EtherType
 from .utils import beautiful_hex
+
 
 @dataclass
 class PCAPPacket:

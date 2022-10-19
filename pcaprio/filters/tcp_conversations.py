@@ -29,15 +29,15 @@ class TCPConversationsFilter(IConversations):
             lambda x: x.frame.communication_protocol == CommunicationProtocol.TCP,
             *([more_filters] if more_filters else [])
         ]).filter()
-        
+
         self._conversations: dict[str, list[PCAPPacket]] = {
 
         }
-    
+
     @property
     def conversations(self) -> Iterable[list[PCAPPacket]]:
         return self._conversations.values()
-    
+
     def detect_conversations(self) -> Iterable[list[PCAPPacket]]:
         for i, p in enumerate(self._packets, 1):
             p.frame_number = i
@@ -55,7 +55,7 @@ class TCPConversationsFilter(IConversations):
                 self._conversations[k1] = [p]
         
         return self.conversations
-    
+
     def get_conversation_completeness(self, conversation: list[PCAPPacket]) -> int:
         """
         Adapted From
