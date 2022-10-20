@@ -18,11 +18,9 @@ The program reads data from a pcap file without using any libraries.
 First [`PCAPFile`](./pcaprio/pcap_file.py#L9) reads the header from the file. The header is stored in an object of class [`PCAPFileHeader`](./pcaprio/pcap_header.py#L5).\
 Then when you call the [`PCAPFile.read_packets`](./pcaprio/pcap_file.py#L30) method you get a generator which reads the packets from the file.\
 I found all the necessary information [here](https://www.ietf.org/archive/id/draft-gharris-opsawg-pcap-01.html#name-packet-record).\
-Every packet ([`PCAPPacket`](./pcaprio/pcap_packet.py#L16)) has its own header. It doesn't make any sense for a job. But I do get it.\
-The package has methods to output the contents in dict format (`PCAPPacket.as_dict`) and to examine the package (`PCAPPacket.parse`).\
-The `PCAPPacket.parse` method calls `identify_frame`, which determines what type of frame is in the package. Next, you get the frames from the packet. They are: [`IEEE_802_3_LLC_Frame`](./pcaprio/frames/ieee_llc.py#L7), [`IEEE_802_3_LLC_SNAP_Frame`](./pcaprio/frames/ieee_llc_snap.py#L12), [`Ethernet2Frame`](./pcaprio/frames/ethernet2.py#L25). They contain all the necessary properties.
-
-
+Every packet ([`PCAPPacket`](./pcaprio/pcap_packet.py#L16)) has its own header. It doesn't make any sense for a job.\
+The package has methods to output the contents in dict format (`PCAPPacket.as_dict`) and to parse the package (`PCAPPacket.parse`).\
+The `PCAPPacket.parse` method calls [`identify_frame`](./pcaprio/pcap_frames.py#L10), which determines what type of frame is in the package. Next, you get the frames from the packet. They are: [`IEEE_802_3_LLC_Frame`](./pcaprio/frames/ieee_llc.py#L7), [`IEEE_802_3_LLC_SNAP_Frame`](./pcaprio/frames/ieee_llc_snap.py#L12), [`Ethernet2Frame`](./pcaprio/frames/ethernet2.py#L25). They contain all the necessary properties.
 
 ![Diagram](./res/diagram_day.png)
 
