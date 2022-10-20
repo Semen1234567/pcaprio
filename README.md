@@ -22,7 +22,19 @@ Every packet ([`PCAPPacket`](./pcaprio/pcap_packet.py#L16)) has its own header. 
 The package has methods to output the contents in dict format (`PCAPPacket.as_dict`) and to parse the package (`PCAPPacket.parse`).\
 The `PCAPPacket.parse` method calls [`identify_frame`](./pcaprio/pcap_frames.py#L10), which determines what type of frame is in the package. Next, you get the frames from the packet. They are: [`IEEE_802_3_LLC_Frame`](./pcaprio/frames/ieee_llc.py#L7), [`IEEE_802_3_LLC_SNAP_Frame`](./pcaprio/frames/ieee_llc_snap.py#L12), [`Ethernet2Frame`](./pcaprio/frames/ethernet2.py#L25). They contain all the necessary properties.
 
-![Diagram](./res/diagram_day.png)
+<p align="center">
+  <img src="./res/diagram_fileread.png" alt="File Reading" width="500"/>
+</p>
+
+<p align="center">
+  <img src="./res/diagram_identify_frame.png" alt="Identify Frame" width="500"/>
+</p>
+
+## Further separation
+Further separation is by constants, such as [`EtherType`](./pcaprio/enumerations.py#L204), [`TCPAppProtocol`](./pcaprio/enumerations.py#L99), and more. They all happen sequentially, level by level.
+
+## Constants
+All constants are stored in the file [`enumerations.py`](./pcaprio/enumerations.py).
 
 ## Filters:
 A basic filter is available. It is designed to simplify filtering.\
