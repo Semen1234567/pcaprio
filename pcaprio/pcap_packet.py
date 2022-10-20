@@ -8,7 +8,7 @@ from .frames.ethernet2 import Ethernet2Frame
 from .frames.ieee_llc import IEEE_802_3_LLC_Frame
 from .frames.ieee_llc_snap import IEEE_802_3_LLC_SNAP_Frame
 from .pcap_frames import identify_frame
-from .enumerations import TCPAppProtocol, EtherType
+from .enumerations import TCPAppProtocol, EtherType, UDPAppProtocol
 from .utils import beautiful_hex
 
 
@@ -112,10 +112,10 @@ class PCAPPacket:
             if self.frame.destination.port:
                 res['dst_port'] = self.frame.destination.port
             
-            if self.frame.source.app and self.frame.source.app != TCPAppProtocol.UNKNOWN:
+            if self.frame.source.app and self.frame.source.app != TCPAppProtocol.UNKNOWN and self.frame.source.app != UDPAppProtocol.UNKNOWN:
                 res['app_protocol'] = self.frame.source.app.value
             
-            elif self.frame.destination.app and self.frame.destination.app != TCPAppProtocol.UNKNOWN:
+            elif self.frame.destination.app and self.frame.destination.app != TCPAppProtocol.UNKNOWN and self.frame.destination.app != UDPAppProtocol.UNKNOWN:
                 res['app_protocol'] = self.frame.destination.app.value
         
         res['hexa_frame'] = self.beautiful_hexlify_data

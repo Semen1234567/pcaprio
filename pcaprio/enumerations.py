@@ -178,7 +178,9 @@ tcp_app_ports = {
 }
 
 udp_app_ports = {
-    69: UDPAppProtocol.TFTP
+    69: UDPAppProtocol.TFTP,
+    
+    -1: TCPAppProtocol.UNKNOWN
 }
 
 
