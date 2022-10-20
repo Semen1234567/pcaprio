@@ -47,7 +47,7 @@ The task of the filters is to get conversations of certain protocols.
 - The [`TFTPConversationsFilter`](./pcaprio/filters/tftp_conversations.py#L11) searches for all communications on port 69. Then it looks for all communications between `source.port`, `source.ip` and `destination.ip`.
 
 
-### Supported protocols ():
+### Supported protocols:
 - ARP
 - ICMP
 - TCP ([`TCPAppProtocol`](./pcaprio/enumerations.py#L99))
