@@ -2,10 +2,12 @@ import binascii
 
 from dataclasses import dataclass
 from dataclasses import field
-from .pcap_frames import Ethernet2Frame, IEEE_802_3_LLC_SNAP_Frame
-from .pcap_frames import IEEE_802_3_LLC_Frame
+
+from .frames.base import PCAPFrame
+from .frames.ethernet2 import Ethernet2Frame
+from .frames.ieee_llc import IEEE_802_3_LLC_Frame
+from .frames.ieee_llc_snap import IEEE_802_3_LLC_SNAP_Frame
 from .pcap_frames import identify_frame
-from .pcap_frames import PCAPFrame
 from .enumerations import TCPAppProtocol, EtherType
 from .utils import beautiful_hex
 

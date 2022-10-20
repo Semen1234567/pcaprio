@@ -5,6 +5,7 @@ import argparse
 import sys
 
 from typing import Generator
+from dumper import get_dumper
 from pcap_filter import collect_data_by_protocol
 from pcap_statistics import collect_statistics
 from emoj import kekw
@@ -76,7 +77,13 @@ parser.add_argument(
     '-o', '--output', help="Output file", type=str, default=None
 )
 
+parser.add_argument(
+    '--output-format', help="Output format", type=str, default="yaml"
+)
 
+parser.add_argument(
+    '--partial-comms-limit', help="partial_comms limit", type=int, default=1
+)
 
 args = parser.parse_args()
 
@@ -84,6 +91,15 @@ if args.заповiт:
     for i in ticker_string("Як умру, то поховайте Мене на могилі Серед степу широкого На Вкраїні милій, Щоб лани широкополі, І Дніпро, і кручі Було видно, було чути, Як реве ревучий. Як понесе з України У синєє море Кров ворожу... отойді я І лани і гори — Все покину, і полину До самого Бога Молитися... а до того Я не знаю Бога. Поховайте та вставайте, Кайдани порвіте І вражою злою кров’ю Волю окропіте. І мене в сем’ї великій, В сем’ї вольній, новій, Не забудьте пом’янути Незлим тихим словом."):
         print(i, end="\r")
         time.sleep(0.1)
+
+partial_comms_limit = args.partial_comms_limit
+
+try:
+    dumper = get_dumper(args.output_format)
+    output_format = args.output_format
+except ValueError:
+    logger.error(f"Unknown output format {args.output_format}")
+    sys.exit(1)
 
 
 input_files = []
@@ -100,23 +116,24 @@ else:
 
 if not args.output:
     for f in input_files:
-        output_files.append(f"{f}.yaml")
+        output_files.append(f"{f}.{output_format}")
 elif os.path.isdir(args.output):
-    output_files = [os.path.abspath(os.path.join(args.output, f"{f}.yaml")) for f in os.listdir(args.input)]
+    output_files = [os.path.abspath(os.path.join(args.output, f"{f}.{output_format}")) for f in os.listdir(args.input)]
 elif len(input_files) == 1:
     output_files = [os.path.abspath(args.output), ]
 else:
     for f in input_files:
-        output_files.append(f"{f}.yaml")
+        output_files.append(f"{f}.{output_format}")
+
 
 
 for input_file, output_file in zip(input_files, output_files):
     t1 = time.time()
     if args.protocol:
         protocol = args.protocol.upper()
-        collect_data_by_protocol(protocol, input_file, output_file)
+        collect_data_by_protocol(protocol, input_file, output_file, dumper, partial_comms_limit)
     else:
-        collect_statistics(input_file, output_file)
+        collect_statistics(input_file, output_file, dumper)
     t2 = time.time()
 
     print("-"*10)

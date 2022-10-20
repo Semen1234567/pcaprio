@@ -15,24 +15,32 @@ At the moment, the functionality is not great. But it meets all the criteria of 
 
 ## About:
 The program reads data from a pcap file without using any libraries. 
-First `PCAPFile` reads the header from the file. The header is stored in an object of class `PCAPFileHeader`.\
-Then when you call the `PCAPFile.read_packets` method you get a generator which reads the packets from the file.\
+First [`PCAPFile`](./pcaprio/pcap_file.py#L9) reads the header from the file. The header is stored in an object of class [`PCAPFileHeader`](./pcaprio/pcap_header.py#L5).\
+Then when you call the [`PCAPFile.read_packets`](./pcaprio/pcap_file.py#L30) method you get a generator which reads the packets from the file.\
 I found all the necessary information [here](https://www.ietf.org/archive/id/draft-gharris-opsawg-pcap-01.html#name-packet-record).\
-Every packet (`PCAPPacket`) has its own header. It doesn't make any sense for a job. But I do get it.\
+Every packet ([`PCAPPacket`](./pcaprio/pcap_packet.py#L16)) has its own header. It doesn't make any sense for a job. But I do get it.\
 The package has methods to output the contents in dict format (`PCAPPacket.as_dict`) and to examine the package (`PCAPPacket.parse`).\
-The `PCAPPacket.parse` method calls `identify_frame`, which determines what type of frame is in the package. Next, you get the frames from the packet. They are: `IEEE_802_3_LLC_Frame`, `IEEE_802_3_LLC_SNAP_Frame`, `Ethernet2Frame`. They contain all the necessary properties.
+The `PCAPPacket.parse` method calls `identify_frame`, which determines what type of frame is in the package. Next, you get the frames from the packet. They are: [`IEEE_802_3_LLC_Frame`](./pcaprio/frames/ieee_llc.py#L7), [`IEEE_802_3_LLC_SNAP_Frame`](./pcaprio/frames/ieee_llc_snap.py#L12), [`Ethernet2Frame`](./pcaprio/frames/ethernet2.py#L25). They contain all the necessary properties.
+
+
+
+![Diagram](./res/diagram_day.png)
 
 ## Filters:
-A basic filter is available. It is designed to simplify filtering. 
+A basic filter is available. It is designed to simplify filtering.\
+All filters are inherited from `IConversations`.\
+The task of the filters is to get conversations of certain protocols.
 ### Filters:
-- The `ARPConversationsFilter` looks for as many ARP packets with ARPOpcode.REQUEST and at least one ARPOpcode.REPLY. If both are present, the communication is successful.
-- The `ICMPConversationsFilter` looks for pairs of `Echo Rquest' and `Echo Reply' packets.
-- The `TCPConversationsFilter` looks for TCP communications and then uses the algorithm from wireshark [documentation](https://www.wireshark.org/docs/wsug_html_chunked/ChAdvTCPAnalysis.html) to determine their completeness.
-- The `TFTPConversationsFilter` searches for all communications on port 69. Then it looks for all communications between `source.port`, `source.ip` and `destination.ip`.
-### Supported protocols:
+- The [`ARPConversationsFilter`](./pcaprio/filters/arp_conversations.py#L23) looks for as many ARP packets with `ARPOpcode.REQUEST` and at least one `ARPOpcode.REPLY`. If both are present, the communication is successful.
+- The [`ICMPConversationsFilter`](./pcaprio/filters/icmp_conversations.py#L11) looks for pairs of `Echo Rquest` and `Echo Reply` packets.
+- The [`TCPConversationsFilter`](./pcaprio/filters/tcp_conversations.py#L25) looks for TCP communications and then uses the algorithm from wireshark [documentation](https://www.wireshark.org/docs/wsug_html_chunked/ChAdvTCPAnalysis.html) to determine their completeness.
+- The [`TFTPConversationsFilter`](./pcaprio/filters/tftp_conversations.py#L11) searches for all communications on port 69. Then it looks for all communications between `source.port`, `source.ip` and `destination.ip`.
+
+
+### Supported protocols ():
 - ARP
 - ICMP
-- TCP
+- TCP ([`TCPAppProtocol`](./pcaprio/enumerations.py#L99))
     - ECHO
     - CHARGEB
     - SSH
@@ -63,10 +71,6 @@ A basic filter is available. It is designed to simplify filtering.
     - MICROSOFT_DS
     - SOCKS
 - TFTP
-
-
-![Diagram](./res/diagram_day.png)
-
 
 ## Usage:
 ### Help:

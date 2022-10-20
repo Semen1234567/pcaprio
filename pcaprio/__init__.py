@@ -5,10 +5,10 @@ from .pcap_file import PCAPFile
 from .pcap_packet import PCAPPacket
 from .pcap_header import PCAPFileHeader
 
-from .pcap_frames import PCAPFrame
-from .pcap_frames import Ethernet2Frame
-from .pcap_frames import IEEE_802_3_LLC_Frame
-from .pcap_frames import IEEE_802_3_LLC_SNAP_Frame
+from .frames.base import PCAPFrame
+from .frames.ethernet2 import Ethernet2Frame
+from .frames.ieee_llc import IEEE_802_3_LLC_Frame
+from .frames.ieee_llc_snap import IEEE_802_3_LLC_SNAP_Frame
 
 
 # PEP 585, Type Hinting Generics In Standard Collections

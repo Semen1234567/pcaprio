@@ -1,6 +1,5 @@
 import logging
-import sys
-import yaml
+from typing import Callable
 
 
 from pcaprio.enumerations import TCPAppProtocol, UDPAppProtocol
@@ -15,7 +14,7 @@ from pcaprio.filters import ARPConversationsFilter
 logger = logging.getLogger("pcaprio")
 
 
-def collect_data_by_protocol(protocol: str | None, input_file: str, output_file: str):
+def collect_data_by_protocol(protocol: str | None, input_file: str, output_file: str, dumper: Callable, partial_comms_limit: int) -> None:
     if not any((
         TCPAppProtocol(protocol) != TCPAppProtocol.UNKNOWN, protocol == "TCP", 
         UDPAppProtocol(protocol) != UDPAppProtocol.UNKNOWN,
@@ -62,18 +61,19 @@ def collect_data_by_protocol(protocol: str | None, input_file: str, output_file:
         else:
             res["partial_comms"].append({
                 "number_comm": partial_comms_id,
-                # "src_comm": conversation[0].frame.source.ip,
-                # "dst_comm": conversation[0].frame.destination.ip,
                 "packets": [p.as_dict() for p in conversation]
             })
             partial_comms_id += 1
     
     if res["partial_comms"]:
-        res["partial_comms"] = [res["partial_comms"][0]] # : (
+        if partial_comms_limit > 0:
+            res["partial_comms"] = [res["partial_comms"][:partial_comms_limit]]
+        else:
+            ...
     else:
         res.pop("partial_comms")
     
     if not res["complete_comms"]:
         res.pop("complete_comms")
 
-    yaml.dump(res, open(output_file, 'w'), sort_keys=False)
+    dumper(res, open(output_file, 'w'), sort_keys=False)

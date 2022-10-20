@@ -3,11 +3,12 @@ from pprint import pprint
 from typing import Callable, Generator, Iterable
 
 from .iconversations import IConversations
-from ..enumerations import CommunicationProtocol, EtherType
-from ..pcap_frames import Ethernet2Frame
-from ..pcap_packet import PCAPPacket
+from ..enumerations import CommunicationProtocol
+from ..enumerations import EtherType
 from ..enumerations import TCPFlag
 from .base_filter import BaseFilter
+from ..frames.ethernet2 import Ethernet2Frame
+from ..pcap_packet import PCAPPacket
 
 
 

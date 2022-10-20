@@ -1,10 +1,12 @@
 from typing import Generator, Iterable
 
 from .iconversations import IConversations
-from ..enumerations import ARPOpcode, EtherType
-from ..pcap_frames import Ethernet2Frame
-from ..pcap_packet import PCAPPacket
 from .base_filter import BaseFilter
+from ..enumerations import ARPOpcode
+from ..enumerations import EtherType
+from ..pcap_packet import PCAPPacket
+from ..frames.ethernet2 import Ethernet2Frame
+
 
 def divide_one_by_many(conversation: Iterable[PCAPPacket]) -> Generator[PCAPPacket, None, None]:
     """Divide one conversation into many conversations."""

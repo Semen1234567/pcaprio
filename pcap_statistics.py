@@ -1,13 +1,10 @@
-import yaml
-
-
+from typing import Callable
 from pcaprio.enumerations import EtherType
-
 from pcaprio import Ethernet2Frame
 from pcaprio import PCAPFile
 
 
-def collect_statistics(input_file: str, output_file: str):
+def collect_statistics(input_file: str, output_file: str, dumper: Callable):
     pcapfile = PCAPFile().read(input_file)
 
     res = {
@@ -47,4 +44,4 @@ def collect_statistics(input_file: str, output_file: str):
     ]
     res["ipv4_senders"] = ipv4_senders
 
-    yaml.dump(res, open(output_file, 'w'), sort_keys=False)
+    dumper(res, open(output_file, 'w'), sort_keys=False)

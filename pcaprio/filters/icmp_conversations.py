@@ -1,10 +1,10 @@
 from typing import Generator, Iterable
 
 from .iconversations import IConversations
-from ..enumerations import CommunicationProtocol, EtherType
-from ..pcap_frames import Ethernet2Frame
-from ..pcap_packet import PCAPPacket
 from .base_filter import BaseFilter
+from ..enumerations import CommunicationProtocol, EtherType
+from ..pcap_packet import PCAPPacket
+from ..frames.ethernet2 import Ethernet2Frame
 
 
 
